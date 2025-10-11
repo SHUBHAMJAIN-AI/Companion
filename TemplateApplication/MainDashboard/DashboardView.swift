@@ -11,6 +11,10 @@ struct DashboardView: View {
     @State private var isProcessing = false
     @State private var chatHistory: [(question: String, answer: String)] = []
     @State private var showDocumentUpload = false
+    @State private var showContacts = false
+    @State private var showDiscover = false
+    @State private var presentingAccount = false
+    @FocusState private var isSearchFocused: Bool
     @StateObject private var openAIService = OpenAIService()
     
     var body: some View {
@@ -29,7 +33,13 @@ struct DashboardView: View {
             
             bottomNavBar
         }
-        .background(Color.white)
+        .background(Color(UIColor.systemGroupedBackground))
+        .sheet(isPresented: $showContacts) {
+            Contacts(presentingAccount: $presentingAccount)
+        }
+        .sheet(isPresented: $showDiscover) {
+            DiscoverView()
+        }
     }
     
     private func sendQuery() {
@@ -85,6 +95,8 @@ struct DashboardView: View {
     private var searchInputRow: some View {
         HStack {
             TextField("Ask a hospital workflow question…", text: $searchText)
+                .focused($isSearchFocused)
+                .textFieldStyle(.plain)
                 .padding(12)
             
             Button(action: {
@@ -169,7 +181,7 @@ struct DashboardView: View {
         }) {
             HStack {
                 Image(systemName: "doc.badge.plus")
-                Text("Scan / Upload PDF")
+                Text("Scan / Upload Docs")
                     .fontWeight(.medium)
             }
             .foregroundColor(Color(hex: "1976D2"))
@@ -212,14 +224,16 @@ struct DashboardView: View {
             BottomNavItem(icon: "list.bullet.clipboard", label: "Protocols", isSelected: selectedTab == 1) {
                 selectedTab = 1
             }
-            BottomNavItem(icon: "bell.fill", label: "Updates", isSelected: selectedTab == 2) {
+            BottomNavItem(icon: "safari.fill", label: "Discover", isSelected: selectedTab == 2) {
                 selectedTab = 2
+                showDiscover = true
             }
             BottomNavItem(icon: "person.fill", label: "Profile", isSelected: selectedTab == 3) {
                 selectedTab = 3
             }
             BottomNavItem(icon: "phone.fill", label: "Contact", isSelected: selectedTab == 4) {
                 selectedTab = 4
+                showContacts = true
             }
         }
         .padding(.vertical, 8)

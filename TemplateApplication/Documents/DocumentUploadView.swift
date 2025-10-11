@@ -8,6 +8,7 @@ import SpeziViews
 
 struct DocumentUploadView: View {
     @State private var showingDocumentPicker = false
+    @State private var showingCamera = false
     @State private var uploadedDocuments: [HealthDocument] = []
     @StateObject private var s3Service = AWSS3Service()
     @Environment(\.dismiss) private var dismiss
@@ -33,6 +34,9 @@ struct DocumentUploadView: View {
                 allowsMultipleSelection: false
             ) { result in
                 handleDocumentSelection(result)
+            }
+            .sheet(isPresented: $showingCamera) {
+                ImagePicker(onImagePicked: handleCameraCapture)
             }
         }
     }
@@ -62,10 +66,25 @@ struct DocumentUploadView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
             
-            Button("Upload Document") {
-                showingDocumentPicker = true
+            HStack(spacing: 15) {
+                Button(action: { showingCamera = true }) {
+                    VStack {
+                        Image(systemName: "camera.fill")
+                        Text("Camera")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                
+                Button(action: { showingDocumentPicker = true }) {
+                    VStack {
+                        Image(systemName: "doc.fill")
+                        Text("Files")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
         }
     }
     
@@ -79,10 +98,17 @@ struct DocumentUploadView: View {
     }
     
     private var uploadButton: some View {
-        Button("Upload New Document") {
-            showingDocumentPicker = true
+        HStack(spacing: 15) {
+            Button(action: { showingCamera = true }) {
+                Label("Camera", systemImage: "camera.fill")
+            }
+            .buttonStyle(.bordered)
+            
+            Button(action: { showingDocumentPicker = true }) {
+                Label("Files", systemImage: "doc.fill")
+            }
+            .buttonStyle(.bordered)
         }
-        .buttonStyle(.bordered)
         .padding()
     }
     
@@ -140,6 +166,51 @@ struct DocumentUploadView: View {
     
     private func deleteDocuments(offsets: IndexSet) {
         uploadedDocuments.remove(atOffsets: offsets)
+    }
+    
+    private func handleCameraCapture(_ image: UIImage) {
+        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        let filename = "photo_\(Date().timeIntervalSince1970).jpg"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        try? data.write(to: tempURL)
+        uploadDocument(from: tempURL)
+    }
+}
+
+struct ImagePicker: UIViewControllerRepresentable {
+    let onImagePicked: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePicker
+        
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onImagePicked(image)
+            }
+            parent.dismiss()
+        }
+        
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
     }
 }
 
