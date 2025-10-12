@@ -36,6 +36,9 @@ An intelligent healthcare companion application built with the Stanford Spezi fr
 - Context-aware responses based on uploaded documents
 - Processing indicators for user feedback
 - Chat history stored securely in Firebase Firestore
+- Voice input integration with microphone button (red when recording)
+- Voice output with speaker button to play AI responses
+- RAG (Retrieval-Augmented Generation) pipeline for enhanced responses
 
 ### 📄 Document Management
 - Upload medical documents (PDF, images, text files)
@@ -44,11 +47,20 @@ An intelligent healthcare companion application built with the Stanford Spezi fr
 - Automatic file type detection
 - Integration with AI for document analysis
 
-### 🎤 Voice Interaction
-- **Speech-to-Text**: Ask questions using voice commands
+### 📰 Discover & Social Features
+- Medical community feed with posts and announcements
+- Like and dislike functionality for posts
+- Delete own posts feature (doctors can only delete their posts)
+- Admin announcements and hospital updates
+- Community engagement and knowledge sharing
+
+### 🎤 Voice Interaction (AssemblyAI Integration)
+- **Speech-to-Text**: Ask questions using voice commands with AssemblyAI
 - **Text-to-Speech**: Listen to AI responses
-- iOS Speech Framework integration
-- Real-time voice recognition with accuracy indicators
+- Real-time audio recording and transcription
+- Voice test interface for debugging
+- RAG pipeline integration for voice queries
+- iOS AVAudioRecorder with high-quality audio capture
 
 ### 👥 Role-Based System
 - **Doctor**: Full access to all features and patient data
@@ -57,15 +69,19 @@ An intelligent healthcare companion application built with the Stanford Spezi fr
 - Seamless role selection during onboarding
 
 ### 📞 Contact Directory
-- Medical staff phone directory
-- Role-based contact access
-- Quick communication with team members
+- Medical staff phone directory with direct call/email actions
+- On-call doctors tab with department-focused contact info
+- All contacts tab with full staff directory (15+ contacts)
+- One-tap call and email buttons
+- Role-based contact access with custom card layouts
 
 ### 🔐 Security & Privacy
 - Firebase Authentication integration
-- Spezi Account management
+- Spezi Account management with custom setup and password recovery
 - Secure data storage and transmission
 - HIPAA compliance considerations
+- Firestore security rules for post deletion (users can only delete own posts)
+- Role-based access control for contacts and features
 
 ---
 
@@ -111,6 +127,7 @@ An intelligent healthcare companion application built with the Stanford Spezi fr
        static let awsSecretKey = "your-aws-secret-key"
        static let awsRegion = "your-aws-region"
        static let awsBucketName = "your-s3-bucket-name"
+       static let assemblyAI = "your-assemblyai-api-key"  // NEW: For voice features
    }
    ```
 
@@ -188,15 +205,47 @@ Manages secure document storage and retrieval from AWS S3.
 - Bucket management
 ```
 
-#### SpeechService
-Provides voice interaction capabilities using iOS Speech Framework.
+#### AssemblyAIService
+Provides advanced voice interaction using AssemblyAI for speech-to-text and text-to-speech.
 
 ```swift
-// Location: TemplateApplication/Services/SpeechService.swift
-- Speech recognition
-- Text-to-speech synthesis
-- Audio session management
-- Permission handling
+// Location: TemplateApplication/Services/AssemblyAIService.swift
+- Speech-to-text transcription
+- Audio file upload to AssemblyAI
+- Polling for transcription completion
+- Text-to-speech synthesis using iOS native AVSpeechSynthesizer
+```
+
+#### AudioRecorder
+Manages high-quality audio recording for voice input.
+
+```swift
+// Location: TemplateApplication/Services/AudioRecorder.swift
+- AVAudioRecorder integration
+- M4A format at 16kHz mono
+- Recording state management
+- Audio session configuration
+```
+
+#### RAGService
+Retrieval-Augmented Generation service for enhanced AI responses.
+
+```swift
+// Location: TemplateApplication/Services/RAGService.swift
+- Document retrieval and context injection
+- Enhanced GPT-4 responses with context
+- Medical knowledge base integration
+```
+
+#### FirestoreService
+Manages all Firestore database operations.
+
+```swift
+// Location: TemplateApplication/Services/FirestoreService.swift
+- Chat history persistence
+- Post creation and deletion
+- User data management
+- Real-time updates
 ```
 
 ### Project Structure
@@ -243,6 +292,14 @@ HealthCompanionApp/
 2. Generate an API key
 3. Add to `APIKeys.swift`
 4. Configure model preferences in `OpenAIService.swift`
+
+### 1.5. AssemblyAI Setup (Voice Features)
+
+1. Sign up at [AssemblyAI](https://www.assemblyai.com/)
+2. Get your API key from the dashboard
+3. Add to `APIKeys.swift` as `assemblyAI`
+4. Free tier includes 5 hours of transcription per month
+5. Voice features automatically enabled in ChatBotView
 
 ### 2. AWS S3 Setup
 
@@ -371,12 +428,28 @@ xcodebuild test -scheme TemplateApplicationUITests -destination 'platform=iOS Si
 
 ## Roadmap
 
-### Current Version (v1.0)
+### Current Version (v2.0) - Latest Updates
 - ✅ Role-based authentication
-- ✅ AI chat interface
-- ✅ Document upload
-- ✅ Voice interaction
-- ✅ Contact directory
+- ✅ AI chat interface with voice input/output
+- ✅ Document upload with AWS S3
+- ✅ AssemblyAI voice integration (STT/TTS)
+- ✅ Contact directory with direct call/email
+- ✅ Delete own posts feature in Discover
+- ✅ Custom account setup and password recovery
+- ✅ Medical protocols feature with JSON data
+- ✅ RAG pipeline for enhanced AI responses
+- ✅ Voice test interface for debugging
+- ✅ Enhanced Firestore security rules
+
+### Recent Additions (Latest Commit)
+- ✅ **Voice Integration**: AssemblyAI speech-to-text and text-to-speech
+- ✅ **Audio Services**: AudioRecorder and RAGService for voice queries
+- ✅ **Enhanced Contacts**: Direct call/email buttons on all contact cards
+- ✅ **Social Features**: Delete own posts in Discover feed
+- ✅ **Account Management**: Custom setup flow and forgot password
+- ✅ **Medical Protocols**: Protocols view with card-based UI
+- ✅ **Testing Tools**: VoiceTestView for voice feature testing
+- ✅ **Documentation**: Comprehensive guides for voice integration
 
 ### Upcoming Features
 - [ ] Enhanced document OCR
@@ -386,6 +459,8 @@ xcodebuild test -scheme TemplateApplicationUITests -destination 'platform=iOS Si
 - [ ] Team collaboration features
 - [ ] Integration with EHR systems
 - [ ] Apple Watch companion app
+- [ ] Real-time streaming voice transcription
+- [ ] Edit post functionality
 
 ---
 

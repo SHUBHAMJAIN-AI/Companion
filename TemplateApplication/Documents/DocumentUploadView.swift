@@ -240,23 +240,64 @@ enum DocumentType {
 
 struct DocumentRow: View {
     let document: HealthDocument
+    @State private var isDownloading = false
     
     var body: some View {
-        HStack {
-            Image(systemName: document.type.icon)
-                .foregroundColor(.blue)
-                .frame(width: 30)
-            
-            VStack(alignment: .leading) {
-                Text(document.name)
-                    .font(.headline)
-                Text("Uploaded \(document.uploadDate, style: .date)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+        Button {
+            openDocument()
+        } label: {
+            HStack {
+                Image(systemName: document.type.icon)
+                    .foregroundColor(.blue)
+                    .frame(width: 30)
+                
+                VStack(alignment: .leading) {
+                    Text(document.name)
+                        .font(.headline)
+                    Text("Uploaded \(document.uploadDate, style: .date)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if isDownloading {
+                    ProgressView()
+                }
             }
-            
-            Spacer()
+            .padding(.vertical, 4)
         }
-        .padding(.vertical, 4)
+        .buttonStyle(.plain)
+    }
+    
+    private func openDocument() {
+        guard let data = try? Data(contentsOf: document.url) else {
+            print("Failed to load document data")
+            return
+        }
+        
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(document.name)
+        do {
+            try data.write(to: tempURL)
+            let controller = UIDocumentInteractionController(url: tempURL)
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first,
+               let rootViewController = window.rootViewController {
+                controller.presentPreview(animated: true)
+                controller.delegate = DocumentInteractionDelegate.shared
+            }
+        } catch {
+            print("Failed to open document: \(error)")
+        }
+    }
+}
+
+final class DocumentInteractionDelegate: NSObject, UIDocumentInteractionControllerDelegate, @unchecked Sendable {
+    static let shared = DocumentInteractionDelegate()
+    
+    func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?.rootViewController ?? UIViewController()
     }
 }
