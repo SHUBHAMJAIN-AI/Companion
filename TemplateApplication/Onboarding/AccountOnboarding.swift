@@ -15,23 +15,9 @@ import SwiftUI
 struct AccountOnboarding: View {
     @Environment(ManagedNavigationStack.Path.self) private var managedNavigationPath
     
-    
     var body: some View {
-        AccountSetup { _ in
-            Task {
-                // Placing the nextStep() call inside this task will ensure that the sheet dismiss animation is
-                // played till the end before we navigate to the next step.
-                managedNavigationPath.nextStep()
-            }
-        } header: {
-            AccountSetupHeader()
-        } continue: {
-            OnboardingActionsView(
-                "Next",
-                action: {
-                    managedNavigationPath.nextStep()
-                }
-            )
+        CustomAccountSetup {
+            managedNavigationPath.nextStep()
         }
         .navigationTitle(Text(verbatim: ""))
         .toolbar(.visible)

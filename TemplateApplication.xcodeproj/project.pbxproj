@@ -571,8 +571,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = edu.stanford.spezi.templateapplication;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=*]" = "";
+				PRODUCT_BUNDLE_IDENTIFIER = "v.k.9329553798-gmail.com";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=*]" = com.hospitalist.templateapplication;
 				PRODUCT_NAME = edu.stanford.spezi.templateapplication;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -605,7 +605,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = edu.stanford.spezi.templateapplication;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hospitalist.templateapplication;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Spezi Template Application";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

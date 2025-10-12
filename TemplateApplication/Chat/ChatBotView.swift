@@ -8,10 +8,13 @@ import FirebaseAuth
 
 struct ChatBotView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var openAIService = OpenAIService()
+    @StateObject private var ragService = RAGService()
+    @StateObject private var audioRecorder = AudioRecorder()
+    @StateObject private var assemblyAI = AssemblyAIService()
     @State private var messages: [ChatBotMessage] = []
     @State private var inputText = ""
     @State private var isProcessing = false
+    @State private var isPlayingAudio = false
     @FocusState private var isInputFocused: Bool
     private let db = Firestore.firestore()
     
@@ -63,26 +66,63 @@ struct ChatBotView: View {
     
     private var inputBar: some View {
         HStack(spacing: 12) {
-            TextField("Ask a question...", text: $inputText)
-                .focused($isInputFocused)
-                .textFieldStyle(.plain)
-                .padding(12)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(20)
-            
-            Button {
-                sendMessage()
-            } label: {
-                Image(systemName: isProcessing ? "hourglass" : "paperplane.fill")
-                    .foregroundColor(.white)
-                    .padding(12)
-                    .background(Color(hex: "1976D2"))
-                    .clipShape(Circle())
+            micButton
+            textField
+            if !messages.isEmpty {
+                speakerButton
             }
-            .disabled(inputText.isEmpty || isProcessing)
+            sendButton
         }
         .padding()
         .background(Color.white)
+    }
+    
+    private var micButton: some View {
+        Button {
+            toggleRecording()
+        } label: {
+            Image(systemName: audioRecorder.isRecording ? "stop.circle.fill" : "mic.fill")
+                .foregroundColor(.white)
+                .padding(12)
+                .background(audioRecorder.isRecording ? Color.red : Color(hex: "1976D2"))
+                .clipShape(Circle())
+        }
+        .disabled(isProcessing)
+    }
+    
+    private var textField: some View {
+        TextField("Ask a question...", text: $inputText)
+            .focused($isInputFocused)
+            .textFieldStyle(.plain)
+            .padding(12)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(20)
+    }
+    
+    private var speakerButton: some View {
+        Button {
+            playLastResponse()
+        } label: {
+            Image(systemName: isPlayingAudio ? "speaker.wave.3.fill" : "speaker.wave.2.fill")
+                .foregroundColor(.white)
+                .padding(12)
+                .background(Color(hex: "1976D2"))
+                .clipShape(Circle())
+        }
+        .disabled(isProcessing || isPlayingAudio)
+    }
+    
+    private var sendButton: some View {
+        Button {
+            sendMessage()
+        } label: {
+            Image(systemName: isProcessing ? "hourglass" : "paperplane.fill")
+                .foregroundColor(.white)
+                .padding(12)
+                .background(Color(hex: "1976D2"))
+                .clipShape(Circle())
+        }
+        .disabled(inputText.isEmpty || isProcessing)
     }
     
     private func sendMessage() {
@@ -97,7 +137,7 @@ struct ChatBotView: View {
         
         Task { @MainActor in
             do {
-                let response = try await openAIService.sendMessage(query)
+                let response = try await ragService.sendMessage(query)
                 let botMessage = ChatBotMessage(text: response, isUser: false)
                 messages.append(botMessage)
                 isProcessing = false
@@ -112,12 +152,66 @@ struct ChatBotView: View {
     private func saveChatHistory() {
         guard !messages.isEmpty, let userId = Auth.auth().currentUser?.uid else { return }
         
-        let chatData: [String: Any] = [
-            "timestamp": Date().timeIntervalSince1970,
-            "messages": messages.map { ["isUser": $0.isUser, "text": $0.text] }
-        ]
+        Task {
+            let title = await generateChatTitle()
+            let chatData: [String: Any] = [
+                "timestamp": Date().timeIntervalSince1970,
+                "title": title,
+                "messages": messages.map { ["isUser": $0.isUser, "text": $0.text] }
+            ]
+            
+            await MainActor.run {
+                db.collection("users").document(userId).collection("chatHistory").addDocument(data: chatData)
+            }
+        }
+    }
+    
+    private func generateChatTitle() async -> String {
+        guard let firstMessage = messages.first(where: { $0.isUser }) else {
+            return "Chat Session"
+        }
         
-        db.collection("users").document(userId).collection("chatHistory").addDocument(data: chatData)
+        let words = firstMessage.text.split(separator: " ").prefix(5)
+        return words.joined(separator: " ")
+    }
+    
+    private func toggleRecording() {
+        if audioRecorder.isRecording {
+            guard let audioURL = audioRecorder.stopRecording() else { return }
+            processVoiceInput(audioURL: audioURL)
+        } else {
+            Task {
+                try? await audioRecorder.startRecording()
+            }
+        }
+    }
+    
+    private func processVoiceInput(audioURL: URL) {
+        isProcessing = true
+        Task { @MainActor in
+            do {
+                let transcription = try await assemblyAI.transcribeAudio(fileURL: audioURL)
+                inputText = transcription
+                sendMessage()
+            } catch {
+                let errorMessage = ChatBotMessage(text: "Voice recognition error: \(error.localizedDescription)", isUser: false)
+                messages.append(errorMessage)
+                isProcessing = false
+            }
+        }
+    }
+    
+    private func playLastResponse() {
+        guard let lastBotMessage = messages.last(where: { !$0.isUser }) else { return }
+        isPlayingAudio = true
+        Task { @MainActor in
+            do {
+                try await assemblyAI.speakText(lastBotMessage.text)
+                isPlayingAudio = false
+            } catch {
+                isPlayingAudio = false
+            }
+        }
     }
 }
 
@@ -136,17 +230,54 @@ struct MessageBubble: View {
                 Spacer()
             }
             
-            Text(message.text)
-                .padding(12)
-                .background(message.isUser ? Color(hex: "1976D2") : Color.gray.opacity(0.2))
-                .foregroundColor(message.isUser ? .white : .primary)
-                .cornerRadius(16)
-                .frame(maxWidth: .infinity * 0.75, alignment: message.isUser ? .trailing : .leading)
+            if message.isUser {
+                Text(message.text)
+                    .padding(12)
+                    .background(Color(hex: "1976D2"))
+                    .foregroundColor(.white)
+                    .cornerRadius(16)
+                    .frame(maxWidth: .infinity * 0.75, alignment: .trailing)
+            } else {
+                MessageTextView(text: message.text)
+                    .padding(12)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(16)
+                    .frame(maxWidth: .infinity * 0.75, alignment: .leading)
+            }
             
             if !message.isUser {
                 Spacer()
             }
         }
+    }
+}
+
+struct MessageTextView: View {
+    let text: String
+    
+    var body: some View {
+        Text(attributedText)
+            .tint(.blue)
+    }
+    
+    private var attributedText: AttributedString {
+        var attributed = AttributedString(text)
+        if let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) {
+            let matches = detector.matches(in: text, range: NSRange(text.startIndex..., in: text))
+            for match in matches.reversed() {
+                if let range = Range(match.range, in: text) {
+                    let urlString = String(text[range])
+                    if let url = URL(string: urlString) {
+                        if let attrRange = Range(match.range, in: attributed) {
+                            attributed[attrRange].link = url
+                            attributed[attrRange].foregroundColor = .blue
+                            attributed[attrRange].underlineStyle = .single
+                        }
+                    }
+                }
+            }
+        }
+        return attributed
     }
 }
 
@@ -161,7 +292,7 @@ struct ChatHistoryListView: View {
                     ChatHistoryDetailView(sessionData: session.data)
                 } label: {
                     VStack(alignment: .leading) {
-                        Text("Chat Session")
+                        Text(session.data["title"] as? String ?? "Chat Session")
                             .font(.headline)
                         if let timestamp = session.data["timestamp"] as? Double {
                             Text(formatDate(timestamp))

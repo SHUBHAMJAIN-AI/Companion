@@ -13,7 +13,7 @@ import SwiftUI
 struct AccountSetupHeader: View {
     @Environment(Account.self) private var account
     @Environment(\.accountSetupState) private var setupState
-    
+    @State private var showForgotPassword = false
     
     var body: some View {
         VStack {
@@ -28,9 +28,18 @@ struct AccountSetupHeader: View {
                 Text("ACCOUNT_SIGNED_IN_DESCRIPTION")
             } else {
                 Text("ACCOUNT_SETUP_DESCRIPTION")
+                    .padding(.bottom, 8)
+                Button("Forgot Password?") {
+                    showForgotPassword = true
+                }
+                .font(.subheadline)
+                .foregroundColor(.blue)
             }
         }
-            .multilineTextAlignment(.center)
+        .multilineTextAlignment(.center)
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
     }
 }
 

@@ -1,0 +1,129 @@
+[
+  {
+    "id": "1",
+    "title": "Hospital & Unit Logistics",
+    "icon": "building.2",
+    "items": [
+      "Layout & Key Depts: ED is on the 1st floor, ICU and med/surg on 3rd, OR on 2nd. Radiology and lab are on the ground floor.",
+      "Parking & Access: Staff park in Lot C. Badges are issued in the HR office. Scrubs are provided for procedures only.",
+      "Workroom: Yes, the hospitalist team has a dedicated room on the 3rd floor with workstations and a whiteboard.",
+      "Census: Daytime census is ~15 patients per hospitalist, 6–8 admissions/night.",
+      "Shifts: Days: 7a–7p. Nights: 7p–7a. Handoff occurs at the hospitalist room at 6:45.",
+      "Admin Contacts: IT Helpdesk: ext. 5555; HR: ext. 4010; Badge Office: ext. 4102."
+    ]
+  },
+  {
+    "id": "2",
+    "title": "EMR / Documentation",
+    "icon": "laptopcomputer",
+    "items": [
+      "EMR System: Epic. Training provided during orientation week.",
+      "Dictation Tools: Yes, Dragon Medical One is available on all workstations.",
+      "Turnaround Time: Progress notes by end of shift; discharge summaries within 24 hours of discharge.",
+      "Discharge Summaries: Required for all discharges; Epic smart phrases available.",
+      "Note Format: Preferred format is APSO. Dot phrases provided in orientation packet.",
+      "Templates: .hospProgressNote, .dischargePlan, and .handoffSummary are commonly used."
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Admissions & Consults",
+    "icon": "person.badge.plus",
+    "items": [
+      "Admissions Assigned: Admitting hospitalist takes admissions via a rotational schedule.",
+      "From ED: Hospitalists admit all medical patients directly from the ED.",
+      "Direct Admissions: Yes, via a transfer center or outpatient referring MD; hospitalist confirms case before bed is assigned.",
+      "Specialty Consults: Order in Epic and page consult service. For urgent cases, call directly.",
+      "Co-management: Yes, ortho, psych, and neurosurg patients are co-managed with hospitalists."
+    ]
+  },
+  {
+    "id": "4",
+    "title": "ICU and Higher Level of Care",
+    "icon": "cross.case",
+    "items": [
+      "ICU Management: Closed ICU. Intensivist covers all ICU patients; hospitalists do not round there.",
+      "ICU Criteria: Based on vitals/labs/organ failure (e.g., sepsis, resp. failure). ICU team makes final call.",
+      "Rapid Response Protocol: Call ext. 9999 for RRT; staffed 24/7 by ICU nurse, RT, and on-call physician.",
+      "Code Blue Response: Hospitalists respond to codes only if they're the primary physician or on RRT call."
+    ]
+  },
+  {
+    "id": "5",
+    "title": "Orders & Protocols",
+    "icon": "list.clipboard",
+    "items": [
+      "Order Sets: Yes — standardized order sets for sepsis, CHF, COPD, and DKA.",
+      "Special Orders: Code status must be discussed with patient/family and documented. Restraint orders must be renewed every 24 hours.",
+      "Antibiotic Policy: Restricted antibiotics (e.g., meropenem, linezolid) require ID approval.",
+      "Anticoagulation/VTE: Pharmacy and nursing-led protocols; hospitalist must order based on risk."
+    ]
+  },
+  {
+    "id": "6",
+    "title": "Communication & Handoffs",
+    "icon": "bubble.left.and.bubble.right",
+    "items": [
+      "Handoff Tool: I-PASS template used in Epic and reviewed verbally at shift change.",
+      "Team Contacts: Use PerfectServe for direct secure messaging; all disciplines available 24/7.",
+      "Rounds: Interdisciplinary rounds at 9 a.m. daily with case manager, pharmacist, and bedside nurse.",
+      "After-Hours: Covered by dedicated nocturnist. Cross-cover info included in handoff note."
+    ]
+  },
+  {
+    "id": "7",
+    "title": "Support Services",
+    "icon": "person.2",
+    "items": [
+      "Case Management: Each floor has assigned CM and SW. Available M–F, 8a–5p.",
+      "Discharge Planning: CM initiates DME/SNF requests. Follow-up scheduled in Epic discharge navigator.",
+      "Home Health: Ordered in Epic; case manager will process and confirm agency.",
+      "Palliative Care: Available Mon–Sat; place Epic consult or page directly for urgent needs.",
+      "Spiritual Care: Chaplain available 7a–5p, on-call after hours via paging operator."
+    ]
+  },
+  {
+    "id": "8",
+    "title": "Scheduling & Coverage",
+    "icon": "calendar",
+    "items": [
+      "Schedule Model: 7-on/7-off; one nocturnist, 4 day hospitalists per shift.",
+      "Schedule Requests: Submit to scheduler (Sandra J., ext. 4530) at least 1 month in advance.",
+      "Leave Policy: CME: 5 days/year; PTO: 20 days/year; notify group leader for coverage.",
+      "Extra Shifts: Available at $200/hour. Email group lead for open shifts."
+    ]
+  },
+  {
+    "id": "9",
+    "title": "Labs, Imaging, Ancillary",
+    "icon": "testtube.2",
+    "items": [
+      "Turnaround Times: CBC/CMP ~1 hour; blood cultures ~48 hrs; CT within 2 hrs.",
+      "Urgent Studies: Call radiology reading room for stat CT/MRI prioritization.",
+      "Radiology Hours: In-house from 7a–11p; teleradiology overnight.",
+      "Critical Results: Called directly to ordering physician or covering provider."
+    ]
+  },
+  {
+    "id": "10",
+    "title": "Onboarding & Growth",
+    "icon": "graduationcap",
+    "items": [
+      "Onboarding: 3-day orientation + shadow shifts. Training on EMR, workflows, protocols.",
+      "Mentorship: Assigned a senior hospitalist mentor for the first 3 months.",
+      "Performance Reviews: Done quarterly with metrics (LOS, readmissions, documentation).",
+      "Growth Opportunities: Openings in QI committee, sepsis task force, and medical staff leadership.",
+      "CME Support: $2,500/year CME allowance + 5 CME days."
+    ]
+  },
+  {
+    "id": "11",
+    "title": "Culture & Team Dynamics",
+    "icon": "person.3",
+    "items": [
+      "Interdepartmental Relations: Strong collaboration with ED and case management. Some delays with ortho consults.",
+      "Common Workflow Challenges: Discharge delays due to transport/SNF placement. Radiology bottlenecks during evenings.",
+      "Advice for Success: Be proactive with discharge planning, document thoroughly, and use your team — case managers are your best resource."
+    ]
+  }
+]

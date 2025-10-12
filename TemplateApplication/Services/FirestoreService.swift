@@ -11,12 +11,13 @@ class PostsService: ObservableObject {
     @Published var posts: [Article] = []
     @Published var announcements: [Announcement] = []
     
-    func createPost(title: String, content: String, author: String) async throws {
+    func createPost(title: String, content: String, author: String, department: String) async throws {
         print("📤 Uploading post to Firestore: \(title)")
         let postData: [String: Any] = [
             "title": title,
             "content": content,
             "author": author,
+            "department": department,
             "date": Timestamp(date: Date()),
             "likes": 0,
             "dislikes": 0,
@@ -52,12 +53,13 @@ class PostsService: ObservableObject {
                       let author = data["author"] as? String,
                       let content = data["content"] as? String,
                       let timestamp = data["date"] as? Timestamp else { return nil }
+                let department = data["department"] as? String ?? "General"
                 let likes = data["likes"] as? Int ?? 0
                 let dislikes = data["dislikes"] as? Int ?? 0
                 let likedBy = data["likedBy"] as? [String] ?? []
                 let dislikedBy = data["dislikedBy"] as? [String] ?? []
                 return Article(
-                    id: doc.documentID, title: title, author: author, date: timestamp.dateValue(),
+                    id: doc.documentID, title: title, author: author, department: department, date: timestamp.dateValue(),
                     content: content, likes: likes, dislikes: dislikes, likedBy: likedBy, dislikedBy: dislikedBy
                 )
             }
@@ -117,8 +119,8 @@ class PostsService: ObservableObject {
                       let content = data["content"] as? String,
                       let typeString = data["type"] as? String,
                       let timestamp = data["date"] as? Timestamp else { return nil }
-                let type: AnnouncementType = typeString == "success" ? .success : .info
-                return Announcement(title: title, type: type, date: timestamp.dateValue(), content: content)
+                let type: AnnouncementType = typeString == "success" ? .success : (typeString == "warning" ? .warning : .info)
+                return Announcement(id: doc.documentID, title: title, type: type, date: timestamp.dateValue(), content: content)
             }
             print("✅ Downloaded \(announcements.count) announcements from Firestore")
         } catch {
@@ -129,12 +131,12 @@ class PostsService: ObservableObject {
     func loadPosts() -> [Article] {
         return [
             Article(
-                id: "1", title: "New COVID-19 Treatment Guidelines", author: "Dr. Sarah Johnson",
+                id: "1", title: "New COVID-19 Treatment Guidelines", author: "Dr. Sarah Johnson", department: "Internal Medicine",
                 date: Date(), content: "Updated protocols for managing COVID-19 patients in the ICU. Follow new dosing guidelines...",
                 likes: 0, dislikes: 0, likedBy: [], dislikedBy: []
             ),
             Article(
-                id: "2", title: "Sepsis Management Best Practices", author: "Dr. Michael Chen",
+                id: "2", title: "Sepsis Management Best Practices", author: "Dr. Michael Chen", department: "Emergency Medicine",
                 date: Date().addingTimeInterval(-86400),
                 content: "Evidence-based approach to early sepsis recognition and treatment...",
                 likes: 0, dislikes: 0, likedBy: [], dislikedBy: []
@@ -142,14 +144,29 @@ class PostsService: ObservableObject {
         ]
     }
     
+    func deletePost(postId: String) async throws {
+        print("🗑️ Deleting post: \(postId)")
+        try await db.collection("posts").document(postId).delete()
+        print("✅ Post deleted successfully")
+        await fetchPosts()
+    }
+    
+    func deleteAnnouncement(announcementId: String) async throws {
+        print("🗑️ Deleting announcement: \(announcementId)")
+        try await db.collection("announcements").document(announcementId).delete()
+        print("✅ Announcement deleted successfully")
+        await fetchAnnouncements()
+    }
+    
     func loadAnnouncements() -> [Announcement] {
-        // Return sample data for now
         return [
             Announcement(
+                id: "sample1",
                 title: "System Maintenance - Jan 15", type: .info, date: Date(),
                 content: "Epic will be down for maintenance from 2-4 AM"
             ),
             Announcement(
+                id: "sample2",
                 title: "New CT Scanner Available", type: .success, date: Date().addingTimeInterval(-86400),
                 content: "Floor 3 now has a new high-speed CT scanner"
             )

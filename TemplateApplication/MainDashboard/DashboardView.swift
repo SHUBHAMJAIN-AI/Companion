@@ -19,10 +19,12 @@ struct DashboardView: View {
     @State private var showChatBot = false
     @State private var showInbox = false
     @State private var showFeedback = false
+    @State private var showProtocols = false
+    @State private var showVoiceTest = false
     @State private var unreadCount = 0
     @State private var presentingAccount = false
     @FocusState private var isSearchFocused: Bool
-    @StateObject private var openAIService = OpenAIService()
+    @StateObject private var ragService = RAGService()
     @AppStorage(StorageKeys.onboardingFlowComplete) private var completedOnboardingFlow = false
     
     private var userRole: String {
@@ -78,6 +80,12 @@ struct DashboardView: View {
         .sheet(isPresented: $showFeedback) {
             FeedbackView()
         }
+        .sheet(isPresented: $showProtocols) {
+            ProtocolsView()
+        }
+        .sheet(isPresented: $showVoiceTest) {
+            VoiceTestView()
+        }
     }
     
     private func sendQuery() {
@@ -89,11 +97,11 @@ struct DashboardView: View {
         
         Task { @MainActor in
             do {
-                let response = try await openAIService.sendMessage(query)
+                let response = try await ragService.sendMessage(query)
                 chatHistory.insert((question: query, answer: response), at: 0)
                 isProcessing = false
             } catch {
-                print("OpenAI Error: \(error)")
+                print("RAG Error: \(error)")
                 chatHistory.insert((question: query, answer: "Error: \(error.localizedDescription)"), at: 0)
                 isProcessing = false
             }
@@ -107,6 +115,13 @@ struct DashboardView: View {
                 .foregroundColor(.white)
             
             Spacer()
+            
+            Button {
+                showVoiceTest = true
+            } label: {
+                Image(systemName: "waveform")
+                    .foregroundColor(.white)
+            }
             
             Button("Logout") {
                 logout()
@@ -236,6 +251,7 @@ struct DashboardView: View {
             }
             BottomNavItem(icon: "list.bullet.clipboard", label: "Protocols", isSelected: selectedTab == 1) {
                 selectedTab = 1
+                showProtocols = true
             }
             BottomNavItem(icon: "safari.fill", label: "Discover", isSelected: selectedTab == 2) {
                 selectedTab = 2

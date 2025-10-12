@@ -6,6 +6,12 @@ import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
 
+struct Department: Identifiable {
+    let id = UUID()
+    let name: String
+    let email: String
+}
+
 struct FeedbackView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedAdmin = ""
@@ -13,20 +19,22 @@ struct FeedbackView: View {
     @State private var isSubmitting = false
     private let db = Firestore.firestore()
     
-    private let adminEmails = [
-        "admin1@hospital.com",
-        "admin2@hospital.com",
-        "admin3@hospital.com"
+    private let departments = [
+        Department(name: "Cardiology", email: "cardiology@hospital.com"),
+        Department(name: "Emergency Medicine", email: "emergency@hospital.com"),
+        Department(name: "Internal Medicine", email: "internalmedicine@hospital.com"),
+        Department(name: "Surgery", email: "surgery@hospital.com"),
+        Department(name: "Administration", email: "admin@hospital.com")
     ]
     
     var body: some View {
         NavigationView {
             Form {
-                Section("Select Administrator") {
-                    Picker("Administrator", selection: $selectedAdmin) {
+                Section("Select Department") {
+                    Picker("Department", selection: $selectedAdmin) {
                         Text("Select...").tag("")
-                        ForEach(adminEmails, id: \.self) { email in
-                            Text(email).tag(email)
+                        ForEach(departments) { dept in
+                            Text("\(dept.name) - \(dept.email)").tag(dept.email)
                         }
                     }
                 }

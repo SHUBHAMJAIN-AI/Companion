@@ -7,18 +7,18 @@ import CryptoKit
 
 @MainActor
 class AWSS3Service: ObservableObject {
-    private let bucketName = "health-companion-documents"
-    private let region = "us-east-1"
+    private let bucketName = "us-west-raw-files-sid"
+    private let region = "us-west-2"
     private let accessKey = APIKeys.awsAccessKey
     private let secretKey = APIKeys.awsSecretKey
     
     func uploadDocument(_ document: HealthDocument, data: Data) async throws -> String {
-        let key = "documents/\(document.id.uuidString)/\(document.name)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        let key = "data-second-raw/\(document.name)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         return try await uploadToS3(key: key, data: data, contentType: getContentType(for: document.type))
     }
     
     func uploadDocument(data: Data, filename: String) async {
-        let key = "chat-history/\(filename)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        let key = "data-second-raw/\(filename)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         _ = try? await uploadToS3(key: key, data: data, contentType: "text/plain")
     }
     
@@ -128,13 +128,15 @@ class AWSS3Service: ObservableObject {
             return "image/jpeg"
         case .text:
             return "text/plain"
+        case .document:
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         case .other:
             return "application/octet-stream"
         }
     }
     
     func downloadDocument(filename: String) async throws -> String {
-        let key = "chat-history/\(filename)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        let key = "data-second-raw/\(filename)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         let urlString = "https://\(bucketName).s3.\(region).amazonaws.com/\(key)"
         
         guard let url = URL(string: urlString) else { throw S3Error.downloadFailed }

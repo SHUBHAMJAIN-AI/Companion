@@ -14,6 +14,7 @@ struct LoginView: View {
     @State private var errorMessage = ""
     @State private var isLoading = false
     @State private var isSignUpMode = false
+    @State private var showForgotPassword = false
     
     var body: some View {
         VStack(spacing: 30) {
@@ -23,6 +24,21 @@ struct LoginView: View {
             loginButton
         }
         .padding()
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
+    }
+    
+    private var forgotPasswordButton: some View {
+        HStack {
+            Spacer()
+            Button("Forgot Password?") {
+                showForgotPassword = true
+            }
+            .font(.subheadline)
+            .foregroundColor(Color(hex: "1976D2"))
+        }
+        .padding(.top, 4)
     }
     
     private var headerView: some View {
@@ -69,6 +85,10 @@ struct LoginView: View {
                     .padding()
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(10)
+                
+                if !isSignUpMode {
+                    forgotPasswordButton
+                }
             }
         }
     }

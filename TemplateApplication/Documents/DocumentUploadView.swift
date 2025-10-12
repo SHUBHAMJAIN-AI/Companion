@@ -30,7 +30,7 @@ struct DocumentUploadView: View {
             }
             .fileImporter(
                 isPresented: $showingDocumentPicker,
-                allowedContentTypes: [.pdf, .image, .text],
+                allowedContentTypes: [.pdf, .image, .text, .plainText, UTType(filenameExtension: "docx") ?? .data],
                 allowsMultipleSelection: false
             ) { result in
                 handleDocumentSelection(result)
@@ -159,6 +159,8 @@ struct DocumentUploadView: View {
             return .image
         case "txt":
             return .text
+        case "docx", "doc":
+            return .document
         default:
             return .other
         }
@@ -223,13 +225,14 @@ struct HealthDocument: Identifiable {
 }
 
 enum DocumentType {
-    case pdf, image, text, other
+    case pdf, image, text, document, other
     
     var icon: String {
         switch self {
         case .pdf: return "doc.fill"
         case .image: return "photo.fill"
         case .text: return "text.document.fill"
+        case .document: return "doc.text.fill"
         case .other: return "doc.fill"
         }
     }
