@@ -2,6 +2,6 @@
 title: Spezi Consent
 ---
 
-Spezi can render consent documents in the markdown format: This is a *markdown* **example**.
+Please provide your information below:
 
 <signature id=sig1 />

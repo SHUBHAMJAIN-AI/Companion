@@ -3,6 +3,8 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct DashboardView: View {
     @State private var searchText = ""
@@ -13,9 +15,19 @@ struct DashboardView: View {
     @State private var showDocumentUpload = false
     @State private var showContacts = false
     @State private var showDiscover = false
+    @State private var showProfile = false
+    @State private var showChatBot = false
+    @State private var showInbox = false
+    @State private var showFeedback = false
+    @State private var unreadCount = 0
     @State private var presentingAccount = false
     @FocusState private var isSearchFocused: Bool
     @StateObject private var openAIService = OpenAIService()
+    @AppStorage(StorageKeys.onboardingFlowComplete) private var completedOnboardingFlow = false
+    
+    private var userRole: String {
+        UserDefaults.standard.string(forKey: "userRole") ?? "doctor"
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -24,8 +36,12 @@ struct DashboardView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     searchBar
-                    quickActionButtons
-                    uploadButton
+                    if userRole == "administrator" {
+                        inboxButton
+                        uploadButton
+                    } else {
+                        feedbackButton
+                    }
                     qaCards
                 }
                 .padding()
@@ -34,11 +50,33 @@ struct DashboardView: View {
             bottomNavBar
         }
         .background(Color(UIColor.systemGroupedBackground))
+        .onAppear {
+            if userRole == "administrator" {
+                loadUnreadCount()
+            }
+        }
         .sheet(isPresented: $showContacts) {
             Contacts(presentingAccount: $presentingAccount)
         }
         .sheet(isPresented: $showDiscover) {
             DiscoverView()
+        }
+        .sheet(isPresented: $showProfile) {
+            ProfileView()
+        }
+        .sheet(isPresented: $showChatBot) {
+            ChatBotView()
+        }
+        .sheet(isPresented: $showInbox) {
+            InboxView()
+        }
+        .onChange(of: showInbox) { _, isShowing in
+            if !isShowing && userRole == "administrator" {
+                loadUnreadCount()
+            }
+        }
+        .sheet(isPresented: $showFeedback) {
+            FeedbackView()
         }
     }
     
@@ -70,14 +108,19 @@ struct DashboardView: View {
             
             Spacer()
             
-            Button("Contact Admin") {
-                // Contact admin action
+            Button("Logout") {
+                logout()
             }
             .foregroundColor(.white)
             .font(.subheadline)
         }
         .padding()
         .background(Color(hex: "1976D2"))
+    }
+    
+    private func logout() {
+        try? Auth.auth().signOut()
+        completedOnboardingFlow = false
     }
     
     private var searchBar: some View {
@@ -140,63 +183,33 @@ struct DashboardView: View {
     private var chatHistoryView: some View {
         VStack(spacing: 12) {
             ForEach(Array(chatHistory.enumerated()), id: \.offset) { _, chat in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Q:")
-                            .fontWeight(.bold)
-                            .foregroundColor(Color(hex: "1976D2"))
-                        Text(chat.question)
-                            .fontWeight(.semibold)
-                    }
-                    
-                    HStack(alignment: .top) {
-                        Text("A:")
-                            .fontWeight(.bold)
-                            .foregroundColor(.gray)
-                        Text(chat.answer)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.white)
-                .cornerRadius(12)
-                .shadow(color: .gray.opacity(0.15), radius: 5, x: 0, y: 2)
+                ChatHistoryCard(question: chat.question, answer: chat.answer)
             }
         }
     }
     
-    private var quickActionButtons: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-            QuickActionButton(title: "Order CT Scan", icon: "cross.case.fill")
-            QuickActionButton(title: "Cardiology Consult", icon: "heart.fill")
-            QuickActionButton(title: "Sepsis Protocol", icon: "waveform.path.ecg")
-            QuickActionButton(title: "Stroke Alert", icon: "brain.head.profile")
-        }
+    private var inboxButton: some View {
+        InboxButtonWithBadge(unreadCount: unreadCount) { showInbox = true }
+    }
+    
+    private func loadUnreadCount() {
+        guard let userEmail = Auth.auth().currentUser?.email else { return }
+        
+        Firestore.firestore().collection("feedback")
+            .whereField("toEmail", isEqualTo: userEmail)
+            .whereField("read", isEqualTo: false)
+            .getDocuments { snapshot, _ in
+                unreadCount = snapshot?.documents.count ?? 0
+            }
     }
     
     private var uploadButton: some View {
-        Button(action: {
-            showDocumentUpload = true
-        }) {
-            HStack {
-                Image(systemName: "doc.badge.plus")
-                Text("Scan / Upload Docs")
-                    .fontWeight(.medium)
-            }
-            .foregroundColor(Color(hex: "1976D2"))
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(hex: "1976D2"), lineWidth: 2)
-            )
-        }
-        .sheet(isPresented: $showDocumentUpload) {
-            DocumentUploadView()
-        }
+        ActionButton(icon: "doc.badge.plus", title: "Scan / Upload Docs") { showDocumentUpload = true }
+            .sheet(isPresented: $showDocumentUpload) { DocumentUploadView() }
+    }
+    
+    private var feedbackButton: some View {
+        ActionButton(icon: "message.badge", title: "Send Feedback") { showFeedback = true }
     }
     
     private var qaCards: some View {
@@ -207,7 +220,6 @@ struct DashboardView: View {
                        "Ensure indication, renal function, and allergies are documented. " +
                        "Notify Radiology via extension 8945 for urgent scans."
             )
-            
             QACard(
                 question: "Who do I call for cardiology consults after hours?",
                 answer: "Page on-call cardiologist via operator (555-1111). " +
@@ -220,6 +232,7 @@ struct DashboardView: View {
         HStack(spacing: 0) {
             BottomNavItem(icon: "message.fill", label: "Ask", isSelected: selectedTab == 0) {
                 selectedTab = 0
+                showChatBot = true
             }
             BottomNavItem(icon: "list.bullet.clipboard", label: "Protocols", isSelected: selectedTab == 1) {
                 selectedTab = 1
@@ -230,6 +243,7 @@ struct DashboardView: View {
             }
             BottomNavItem(icon: "person.fill", label: "Profile", isSelected: selectedTab == 3) {
                 selectedTab = 3
+                showProfile = true
             }
             BottomNavItem(icon: "phone.fill", label: "Contact", isSelected: selectedTab == 4) {
                 selectedTab = 4
@@ -239,6 +253,35 @@ struct DashboardView: View {
         .padding(.vertical, 8)
         .background(Color.white)
         .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: -2)
+    }
+}
+
+struct ChatHistoryCard: View {
+    let question: String
+    let answer: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Q:")
+                    .fontWeight(.bold)
+                    .foregroundColor(Color(hex: "1976D2"))
+                Text(question)
+                    .fontWeight(.semibold)
+            }
+            HStack(alignment: .top) {
+                Text("A:")
+                    .fontWeight(.bold)
+                    .foregroundColor(.gray)
+                Text(answer)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .gray.opacity(0.15), radius: 5, x: 0, y: 2)
     }
 }
 
@@ -291,6 +334,56 @@ struct QACard: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: .gray.opacity(0.15), radius: 5, x: 0, y: 2)
+    }
+}
+
+struct ActionButton: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                Text(title).fontWeight(.medium)
+            }
+            .foregroundColor(Color(hex: "1976D2"))
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .cornerRadius(12)
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: "1976D2"), lineWidth: 2))
+        }
+    }
+}
+
+struct InboxButtonWithBadge: View {
+    let unreadCount: Int
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: "tray.fill")
+                Text("Inbox").fontWeight(.medium)
+                if unreadCount > 0 {
+                    Text("\(unreadCount)")
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.red)
+                        .clipShape(Capsule())
+                }
+            }
+            .foregroundColor(Color(hex: "1976D2"))
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .cornerRadius(12)
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: "1976D2"), lineWidth: 2))
+        }
     }
 }
 

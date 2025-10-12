@@ -49,35 +49,13 @@ struct OnboardingFlow: View {
         ManagedNavigationStack(didComplete: $completedOnboardingFlow) {
             Welcome()
             
-            if !FeatureFlags.disableFirebase {
-                AccountOnboarding()
-            }
-            
             RoleSelectionView(onboardingSteps: $onboardingSteps)
-            InterestingModules()
-            
+            LoginView()
 #if !(targetEnvironment(simulator) && (arch(i386) || arch(x86_64)))
             Consent()
 #endif
-            
-            if HKHealthStore.isHealthDataAvailable() && !healthKitAuthorization {
-                HealthKitPermissions()
-            }
-            
-            if !localNotificationAuthorization {
-                NotificationPermissions()
-            }
         }
         .interactiveDismissDisabled(!completedOnboardingFlow)
-        .onChange(of: scenePhase, initial: true) {
-            guard case .active = scenePhase else {
-                return
-            }
-            
-            Task {
-                localNotificationAuthorization = await notificationSettings().authorizationStatus == .authorized
-            }
-        }
     }
 }
 

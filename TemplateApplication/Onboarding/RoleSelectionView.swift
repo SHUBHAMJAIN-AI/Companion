@@ -22,7 +22,7 @@ struct RoleSelectionView: View {
     
     private var headerView: some View {
         VStack(spacing: 10) {
-            Text("Welcome to Health Companion")
+            Text("Welcome to Hospitalist Companion")
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
@@ -38,7 +38,7 @@ struct RoleSelectionView: View {
             RoleCard(
                 role: .doctor,
                 title: "Doctor",
-                description: "Full access to all features including patient management",
+                description: "",
                 icon: "stethoscope",
                 isSelected: selectedRole == .doctor
             ) {
@@ -46,19 +46,9 @@ struct RoleSelectionView: View {
             }
             
             RoleCard(
-                role: .resident,
-                title: "Resident",
-                description: "Access to learning tools and supervised patient care",
-                icon: "graduationcap",
-                isSelected: selectedRole == .resident
-            ) {
-                selectedRole = .resident
-            }
-            
-            RoleCard(
                 role: .administrator,
                 title: "Administrator",
-                description: "System management and user oversight capabilities",
+                description: "",
                 icon: "person.badge.key",
                 isSelected: selectedRole == .administrator
             ) {
@@ -108,10 +98,12 @@ struct RoleCard: View {
                         .font(.headline)
                         .foregroundColor(isSelected ? .white : .primary)
                     
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
-                        .multilineTextAlignment(.leading)
+                    if !description.isEmpty {
+                        Text(description)
+                            .font(.caption)
+                            .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                            .multilineTextAlignment(.leading)
+                    }
                 }
                 
                 Spacer()

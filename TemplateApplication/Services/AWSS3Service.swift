@@ -14,6 +14,15 @@ class AWSS3Service: ObservableObject {
     
     func uploadDocument(_ document: HealthDocument, data: Data) async throws -> String {
         let key = "documents/\(document.id.uuidString)/\(document.name)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        return try await uploadToS3(key: key, data: data, contentType: getContentType(for: document.type))
+    }
+    
+    func uploadDocument(data: Data, filename: String) async {
+        let key = "chat-history/\(filename)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        _ = try? await uploadToS3(key: key, data: data, contentType: "text/plain")
+    }
+    
+    private func uploadToS3(key: String, data: Data, contentType: String) async throws -> String {
         let urlString = "https://\(bucketName).s3.\(region).amazonaws.com/\(key)"
         
         guard let url = URL(string: urlString) else { throw S3Error.uploadFailed }
@@ -22,7 +31,6 @@ class AWSS3Service: ObservableObject {
         request.httpMethod = "PUT"
         request.httpBody = data
         
-        let contentType = getContentType(for: document.type)
         let date = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
@@ -123,6 +131,54 @@ class AWSS3Service: ObservableObject {
         case .other:
             return "application/octet-stream"
         }
+    }
+    
+    func downloadDocument(filename: String) async throws -> String {
+        let key = "chat-history/\(filename)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        let urlString = "https://\(bucketName).s3.\(region).amazonaws.com/\(key)"
+        
+        guard let url = URL(string: urlString) else { throw S3Error.downloadFailed }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        let date = Date()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
+        let amzDate = dateFormatter.string(from: date)
+        
+        dateFormatter.dateFormat = "yyyyMMdd"
+        let dateStamp = dateFormatter.string(from: date)
+        
+        request.setValue(amzDate, forHTTPHeaderField: "x-amz-date")
+        
+        let sigParams = SignatureParams(
+            method: "GET", path: "/\(key)", date: amzDate, dateStamp: dateStamp,
+            contentType: "", contentLength: 0, payloadHash: sha256Hash(Data())
+        )
+        let signature = createSignature(sigParams)
+        request.setValue(signature, forHTTPHeaderField: "Authorization")
+        
+        print("S3 Download URL: \(urlString)")
+        print("S3 Download Authorization: \(signature)")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            print("S3 Download: Invalid response")
+            throw S3Error.downloadFailed
+        }
+        
+        print("S3 Download Status Code: \(httpResponse.statusCode)")
+        
+        if httpResponse.statusCode != 200 {
+            let errorBody = String(data: data, encoding: .utf8) ?? "No error body"
+            print("S3 Download Error Response: \(errorBody)")
+            throw S3Error.downloadFailed
+        }
+        
+        return String(data: data, encoding: .utf8) ?? "Unable to decode content"
     }
 }
 

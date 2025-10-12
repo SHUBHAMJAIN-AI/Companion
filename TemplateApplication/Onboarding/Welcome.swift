@@ -17,8 +17,8 @@ struct Welcome: View {
     
     var body: some View {
         OnboardingView(
-            title: "Health Companion",
-            subtitle: "Your AI-powered medical assistant for healthcare professionals",
+            title: "Hospitalist Companion",
+            subtitle: "Your AI-powered medical companion for healthcare professionals",
             areas: [
                 OnboardingInformationView.Area(
                     icon: {
@@ -26,26 +26,26 @@ struct Welcome: View {
                             .accessibilityHidden(true)
                     },
                     title: "AI Chat Assistant",
-                    description: "Get instant insights from your medical documents using advanced AI"
+                    description: "Answer all your questions about your hospital protocols."
                 ),
                 OnboardingInformationView.Area(
                     icon: {
-                        Image(systemName: "doc.fill")
+                        Image(systemName: "safari.fill")
                             .accessibilityHidden(true)
                     },
-                    title: "Document Analysis",
-                    description: "Upload and analyze medical reports, lab results, and patient documents"
+                    title: "Discover",
+                    description: "Stay up to date on all your department announcements."
                 ),
                 OnboardingInformationView.Area(
                     icon: {
-                        Image(systemName: "mic.fill")
+                        Image(systemName: "phone.fill")
                             .accessibilityHidden(true)
                     },
-                    title: "Voice Interface",
-                    description: "Ask questions using speech and receive spoken responses"
+                    title: "Directory",
+                    description: "An easy way to navigate and find who you need quickly."
                 )
             ],
-            actionText: "Learn More",
+            actionText: "Begin",
             action: {
                 managedNavigationPath.nextStep()
             }

@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct DiscoverView: View {
     @State private var selectedTab = 0
@@ -23,7 +24,7 @@ struct DiscoverView: View {
                 .padding()
                 
                 if selectedTab == 0 {
-                    ArticlesListView(articles: $articles)
+                    ArticlesListView(articles: $articles, postsService: postsService)
                 } else {
                     AnnouncementsListView(announcements: $announcements)
                 }
@@ -45,26 +46,31 @@ struct DiscoverView: View {
                 CreatePostView(postsService: postsService, articles: $articles, announcements: $announcements)
             }
             .onAppear {
-                loadData()
+                Task {
+                    await loadData()
+                }
             }
         }
     }
     
-    private func loadData() {
-        articles = postsService.loadPosts()
-        announcements = postsService.loadAnnouncements()
+    private func loadData() async {
+        await postsService.fetchPosts()
+        await postsService.fetchAnnouncements()
+        articles = postsService.posts
+        announcements = postsService.announcements
     }
 }
 
 struct ArticlesListView: View {
     @Binding var articles: [Article]
+    @ObservedObject var postsService: PostsService
     
     var body: some View {
         ScrollView {
             VStack(spacing: 15) {
                 ForEach(articles) { article in
                     NavigationLink(destination: ArticleDetailView(article: article)) {
-                        ArticleCard(article: article)
+                        ArticleCard(article: article, postsService: postsService, articles: $articles)
                     }
                     .buttonStyle(.plain)
                 }
@@ -91,32 +97,93 @@ struct AnnouncementsListView: View {
 
 struct ArticleCard: View {
     let article: Article
+    @ObservedObject var postsService: PostsService
+    @Binding var articles: [Article]
+    
+    private var userId: String {
+        Auth.auth().currentUser?.uid ?? ""
+    }
+    
+    private var hasLiked: Bool {
+        article.likedBy.contains(userId)
+    }
+    
+    private var hasDisliked: Bool {
+        article.dislikedBy.contains(userId)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(article.title)
-                .font(.headline)
-                .foregroundColor(Color(hex: "1976D2"))
-            
-            HStack {
-                Text(article.author)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text(article.date, style: .date)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Text(article.content)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .lineLimit(3)
+            articleHeader
+            articleMetadata
+            articleContent
+            reactionButtons
         }
         .padding()
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: .gray.opacity(0.15), radius: 5, x: 0, y: 2)
+    }
+    
+    private var articleHeader: some View {
+        Text(article.title)
+            .font(.headline)
+            .foregroundColor(Color(hex: "1976D2"))
+    }
+    
+    private var articleMetadata: some View {
+        HStack {
+            Text(article.author)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(article.date, style: .date)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    private var articleContent: some View {
+        Text(article.content)
+            .font(.body)
+            .foregroundColor(.secondary)
+            .lineLimit(3)
+    }
+    
+    private var reactionButtons: some View {
+        HStack(spacing: 20) {
+            Button {
+                Task {
+                    await postsService.toggleLike(
+                        postId: article.id, userId: userId,
+                        currentlyLiked: hasLiked, currentlyDisliked: hasDisliked
+                    )
+                    articles = postsService.posts
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: hasLiked ? "hand.thumbsup.fill" : "hand.thumbsup")
+                    Text("\(article.likes)")
+                }
+                .foregroundColor(hasLiked ? .blue : .gray)
+            }
+            
+            Button {
+                Task {
+                    await postsService.toggleDislike(
+                        postId: article.id, userId: userId,
+                        currentlyDisliked: hasDisliked, currentlyLiked: hasLiked
+                    )
+                    articles = postsService.posts
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: hasDisliked ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                    Text("\(article.dislikes)")
+                }
+                .foregroundColor(hasDisliked ? .red : .gray)
+            }
+        }
     }
 }
 
@@ -201,15 +268,12 @@ struct CreatePostView: View {
     
     private func savePost() async {
         if postType == 0 {
-            let article = Article(title: title, author: "Current User", date: Date(), content: content)
-            articles.insert(article, at: 0)
             try? await postsService.createPost(title: title, content: content, author: "Current User")
+            articles = postsService.posts
         } else {
-            let type: AnnouncementType = announcementType == 0 ? .info : (announcementType == 1 ? .success : .warning)
-            let announcement = Announcement(title: title, type: type, date: Date(), content: content)
-            announcements.insert(announcement, at: 0)
             let typeStr = announcementType == 0 ? "info" : (announcementType == 1 ? "success" : "warning")
             try? await postsService.createAnnouncement(title: title, content: content, type: typeStr, author: "Current User")
+            announcements = postsService.announcements
         }
     }
 }
@@ -246,11 +310,15 @@ struct ArticleDetailView: View {
 }
 
 struct Article: Identifiable {
-    let id = UUID()
+    let id: String
     let title: String
     let author: String
     let date: Date
     let content: String
+    var likes: Int
+    var dislikes: Int
+    var likedBy: [String]
+    var dislikedBy: [String]
 }
 
 struct Announcement: Identifiable {
