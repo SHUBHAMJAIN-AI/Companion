@@ -1,4 +1,4 @@
-# Health Companion - AI-Powered Medical Assistant
+# Hospitalist Companion - AI-Powered Medical Assistant
 
 <div align="center">
 
@@ -17,7 +17,7 @@ An intelligent healthcare companion application built with the Stanford Spezi fr
 
 ## Overview
 
-**Health Companion** is a comprehensive iOS healthcare application designed for medical professionals including doctors, residents, and healthcare administrators. Built on Stanford's Spezi framework, it combines modern AI capabilities with secure data management to streamline medical workflows and enhance patient care.
+**Hospitalist Companion** is a comprehensive iOS healthcare application designed for medical professionals including doctors, residents, and healthcare administrators. Built on Stanford's Spezi framework, it combines modern AI capabilities with secure data management to streamline medical workflows and enhance patient care.
 
 ### Key Highlights
 
