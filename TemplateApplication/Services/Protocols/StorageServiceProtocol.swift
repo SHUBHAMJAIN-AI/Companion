@@ -90,6 +90,7 @@ enum StorageServiceError: LocalizedError {
     case quotaExceeded
     case networkError(Error)
     case invalidData
+    case operationNotSupported(String)
 
     var errorDescription: String? {
         switch self {
@@ -111,35 +112,60 @@ enum StorageServiceError: LocalizedError {
             return "Network error: \(error.localizedDescription)"
         case .invalidData:
             return "Invalid document data"
+        case .operationNotSupported(let operation):
+            return "Operation not supported: \(operation)"
         }
     }
 }
 
-/// Helper to determine content type from filename
-func contentType(for filename: String) -> String {
-    let ext = (filename as NSString).pathExtension.lowercased()
-    switch ext {
-    case "pdf":
-        return "application/pdf"
-    case "jpg", "jpeg":
-        return "image/jpeg"
-    case "png":
-        return "image/png"
-    case "gif":
-        return "image/gif"
-    case "txt":
-        return "text/plain"
-    case "json":
-        return "application/json"
-    case "doc":
-        return "application/msword"
-    case "docx":
-        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    case "xls":
-        return "application/vnd.ms-excel"
-    case "xlsx":
-        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    default:
-        return "application/octet-stream"
+/// Utility for determining MIME content types from filenames
+enum MIMEType {
+    /// Determine the MIME content type from a filename
+    /// - Parameter filename: The filename to analyze
+    /// - Returns: The MIME type string (defaults to application/octet-stream)
+    static func from(filename: String) -> String {
+        let ext = (filename as NSString).pathExtension.lowercased()
+        switch ext {
+        case "pdf":
+            return "application/pdf"
+        case "jpg", "jpeg":
+            return "image/jpeg"
+        case "png":
+            return "image/png"
+        case "gif":
+            return "image/gif"
+        case "txt":
+            return "text/plain"
+        case "json":
+            return "application/json"
+        case "doc":
+            return "application/msword"
+        case "docx":
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        case "xls":
+            return "application/vnd.ms-excel"
+        case "xlsx":
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        case "html", "htm":
+            return "text/html"
+        case "css":
+            return "text/css"
+        case "js":
+            return "application/javascript"
+        case "xml":
+            return "application/xml"
+        case "zip":
+            return "application/zip"
+        case "mp3":
+            return "audio/mpeg"
+        case "mp4":
+            return "video/mp4"
+        case "webp":
+            return "image/webp"
+        case "svg":
+            return "image/svg+xml"
+        default:
+            return "application/octet-stream"
+        }
     }
 }

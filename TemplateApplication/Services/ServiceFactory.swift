@@ -160,17 +160,16 @@ class AWSS3ServiceAdapter: DocumentStorageProtocol {
 
     func listDocuments(prefix: String?) async throws -> [StoredDocument] {
         // AWS S3 list not implemented in current service
-        // Return empty array
-        return []
+        throw StorageServiceError.operationNotSupported("listDocuments is not implemented for AWS S3 adapter")
     }
 
     func deleteDocument(path: String) async throws {
         // AWS S3 delete not implemented in current service
-        throw StorageServiceError.deleteFailed("Delete not implemented for S3")
+        throw StorageServiceError.operationNotSupported("deleteDocument is not implemented for AWS S3 adapter")
     }
 
     func getDocumentMetadata(path: String) async throws -> StoredDocument {
         // AWS S3 metadata not implemented in current service
-        throw StorageServiceError.documentNotFound(path)
+        throw StorageServiceError.operationNotSupported("getDocumentMetadata is not implemented for AWS S3 adapter")
     }
 }

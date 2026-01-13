@@ -4,19 +4,24 @@
 description: "Health Companion LLM Red Team Evaluation"
 
 # Provider configurations
+# Environment variables:
+#   RAG_API_URL - URL for the RAG API endpoint (required for rag-api provider)
+#   RAG_KNOWLEDGE_BASE_ID - Knowledge base ID for RAG queries (required for rag-api provider)
+#   OPENROUTER_API_KEY - API key for OpenRouter (required for openrouter providers)
+#   OPENAI_API_KEY - API key for OpenAI (required for openai provider)
 providers:
   # RAG API - Primary chat interface
   - id: http
     label: rag-api
     config:
-      url: "https://n4erggelag.execute-api.us-west-2.amazonaws.com/prod/query"
+      url: "${RAG_API_URL:https://n4erggelag.execute-api.us-west-2.amazonaws.com/prod/query}"
       method: POST
       headers:
         Content-Type: application/json
         Accept: application/json
       body:
         query: "{{prompt}}"
-        knowledge_base_id: "K205PUDOUS"
+        knowledge_base_id: "${RAG_KNOWLEDGE_BASE_ID:K205PUDOUS}"
       transformResponse: |
         json.body ? JSON.parse(json.body).answer : json.answer || JSON.stringify(json)
 

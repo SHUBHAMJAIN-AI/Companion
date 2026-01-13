@@ -81,8 +81,14 @@ class OpenRouterService: ObservableObject, LLMServiceProtocol {
     private func buildMessages(userMessage: String, systemPrompt: String?, context: [String]?) -> [[String: String]] {
         var messages: [[String: String]] = []
 
-        // Add system prompt
-        let systemContent = systemPrompt ?? ServiceConfiguration.medicalSystemPrompt
+        // Add system prompt - always includes a system prompt for safety
+        // Uses custom prompt if provided and non-empty, otherwise falls back to medical prompt
+        let systemContent: String
+        if let customPrompt = systemPrompt, !customPrompt.isEmpty {
+            systemContent = customPrompt
+        } else {
+            systemContent = ServiceConfiguration.medicalSystemPrompt
+        }
         messages.append(["role": "system", "content": systemContent])
 
         // Add context if provided

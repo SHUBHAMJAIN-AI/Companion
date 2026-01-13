@@ -69,10 +69,10 @@ struct ServiceConfiguration {
 
     // MARK: - OpenRouter Configuration
 
-    /// OpenRouter model to use (default: Claude 3.5 Sonnet)
+    /// OpenRouter model to use (default: Claude Sonnet 4)
     static var openRouterModel: String {
         get {
-            UserDefaults.standard.string(forKey: "openrouter_model") ?? "anthropic/claude-3.5-sonnet"
+            UserDefaults.standard.string(forKey: "openrouter_model") ?? "anthropic/claude-sonnet-4"
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "openrouter_model")
@@ -80,13 +80,16 @@ struct ServiceConfiguration {
     }
 
     /// Available OpenRouter models
+    /// Note: Model IDs follow OpenRouter's naming conventions
     static let availableOpenRouterModels: [(id: String, name: String)] = [
+        ("anthropic/claude-sonnet-4", "Claude Sonnet 4"),
+        ("anthropic/claude-opus-4", "Claude Opus 4"),
         ("anthropic/claude-3.5-sonnet", "Claude 3.5 Sonnet"),
-        ("anthropic/claude-3-opus", "Claude 3 Opus"),
         ("openai/gpt-4o", "GPT-4o"),
-        ("openai/gpt-4-turbo", "GPT-4 Turbo"),
+        ("openai/gpt-4o-mini", "GPT-4o Mini"),
+        ("google/gemini-2.0-flash-exp", "Gemini 2.0 Flash"),
         ("google/gemini-pro", "Gemini Pro"),
-        ("meta-llama/llama-3.1-70b-instruct", "Llama 3.1 70B"),
+        ("meta-llama/llama-3.3-70b-instruct", "Llama 3.3 70B"),
         ("mistralai/mistral-large", "Mistral Large")
     ]
 

@@ -55,7 +55,7 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
             let uploadTask = storageRef.putData(data, metadata: storageMetadata)
 
             // Observe progress
-            uploadTask.observe(.progress) { [weak self] snapshot in
+            let progressHandle = uploadTask.observe(.progress) { [weak self] snapshot in
                 if let progress = snapshot.progress {
                     Task { @MainActor in
                         self?.uploadProgress = Double(progress.completedUnitCount) / Double(progress.totalUnitCount)
@@ -63,16 +63,36 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
                 }
             }
 
-            // Wait for completion
+            // Wait for completion with proper observer cleanup
             _ = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageMetadata, Error>) in
-                uploadTask.observe(.success) { snapshot in
+                var hasResumed = false
+                var successHandle: String?
+                var failureHandle: String?
+
+                successHandle = uploadTask.observe(.success) { snapshot in
+                    guard !hasResumed else { return }
+                    hasResumed = true
+
+                    // Clean up observers
+                    uploadTask.removeObserver(withHandle: progressHandle)
+                    if let handle = successHandle { uploadTask.removeObserver(withHandle: handle) }
+                    if let handle = failureHandle { uploadTask.removeObserver(withHandle: handle) }
+
                     if let metadata = snapshot.metadata {
                         continuation.resume(returning: metadata)
                     } else {
                         continuation.resume(throwing: StorageServiceError.uploadFailed("No metadata returned"))
                     }
                 }
-                uploadTask.observe(.failure) { snapshot in
+                failureHandle = uploadTask.observe(.failure) { snapshot in
+                    guard !hasResumed else { return }
+                    hasResumed = true
+
+                    // Clean up observers
+                    uploadTask.removeObserver(withHandle: progressHandle)
+                    if let handle = successHandle { uploadTask.removeObserver(withHandle: handle) }
+                    if let handle = failureHandle { uploadTask.removeObserver(withHandle: handle) }
+
                     continuation.resume(throwing: StorageServiceError.uploadFailed(snapshot.error?.localizedDescription))
                 }
             }

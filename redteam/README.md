@@ -86,15 +86,23 @@ jobs:
 
 ## Environment Variables
 
-For OpenRouter tests (recommended):
+### Required for RAG API tests:
+```bash
+export RAG_API_URL=https://your-api-endpoint.com/prod/query
+export RAG_KNOWLEDGE_BASE_ID=your-knowledge-base-id
+```
+
+### For OpenRouter tests (recommended):
 ```bash
 export OPENROUTER_API_KEY=your-openrouter-key
 ```
 
-For OpenAI direct tests:
+### For OpenAI direct tests:
 ```bash
 export OPENAI_API_KEY=sk-your-key-here
 ```
+
+> **Note:** If RAG_API_URL and RAG_KNOWLEDGE_BASE_ID are not set, defaults will be used.
 
 ## Available Providers
 
@@ -121,9 +129,11 @@ promptfoo eval -c promptfooconfig.yaml
 
 ## Results
 
-Results are saved to `./results/eval-results.json`
+Results are saved to `./results/eval-results.json` (gitignored).
 
 View interactive report:
 ```bash
 promptfoo view
 ```
+
+The results directory is excluded from version control to avoid committing sensitive test data.
