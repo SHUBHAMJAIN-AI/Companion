@@ -2,8 +2,8 @@
 // Profile View for Health Companion
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
@@ -41,6 +41,7 @@ struct ProfileView: View {
                 Image(systemName: "person.circle.fill")
                     .font(.system(size: 60))
                     .foregroundColor(Color(hex: "1976D2"))
+                    .accessibilityHidden(true)
                 
                 VStack(alignment: .leading, spacing: 5) {
                     Text(currentUser?.email ?? "No email")
@@ -79,6 +80,7 @@ struct ProfileView: View {
             } label: {
                 HStack {
                     Image(systemName: "lock.rotation")
+                        .accessibilityHidden(true)
                     Text("Change Password")
                 }
             }
@@ -132,8 +134,7 @@ struct ChangePasswordView: View {
         }
     }
     
-    @ViewBuilder
-    private var errorSection: some View {
+    @ViewBuilder private var errorSection: some View {
         if !errorMessage.isEmpty {
             Section {
                 Text(errorMessage)
@@ -233,11 +234,14 @@ struct AboutView: View {
                     .foregroundColor(.secondary)
             }
             
-            Section {
-                Link(destination: URL(string: "https://github.com/SHUBHAMJAIN-AI/Companion")!) {
-                    HStack {
-                        Image(systemName: "link")
-                        Text("GitHub Repository")
+            if let githubURL = URL(string: "https://github.com/SHUBHAMJAIN-AI/Companion") {
+                Section {
+                    Link(destination: githubURL) {
+                        HStack {
+                            Image(systemName: "link")
+                                .accessibilityHidden(true)
+                            Text("GitHub Repository")
+                        }
                     }
                 }
             }

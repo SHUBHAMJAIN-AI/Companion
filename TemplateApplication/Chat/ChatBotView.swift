@@ -2,9 +2,9 @@
 // ChatBot View for Health Companion
 //
 
-import SwiftUI
-import FirebaseFirestore
 import FirebaseAuth
+import FirebaseFirestore
+import SwiftUI
 
 struct ChatBotView: View {
     @Environment(\.dismiss) private var dismiss
@@ -16,7 +16,7 @@ struct ChatBotView: View {
     @State private var isProcessing = false
     @State private var isPlayingAudio = false
     @FocusState private var isInputFocused: Bool
-    private let db = Firestore.firestore()
+    private let database = Firestore.firestore()
     
     var body: some View {
         NavigationView {
@@ -38,6 +38,7 @@ struct ChatBotView: View {
                         ChatHistoryListView()
                     } label: {
                         Image(systemName: "clock.arrow.circlepath")
+                            .accessibilityLabel("Chat history")
                     }
                 }
             }
@@ -86,6 +87,7 @@ struct ChatBotView: View {
                 .padding(12)
                 .background(audioRecorder.isRecording ? Color.red : Color(hex: "1976D2"))
                 .clipShape(Circle())
+                .accessibilityLabel(audioRecorder.isRecording ? "Stop recording" : "Start recording")
         }
         .disabled(isProcessing)
     }
@@ -108,6 +110,7 @@ struct ChatBotView: View {
                 .padding(12)
                 .background(Color(hex: "1976D2"))
                 .clipShape(Circle())
+                .accessibilityLabel(isPlayingAudio ? "Playing audio" : "Play response")
         }
         .disabled(isProcessing || isPlayingAudio)
     }
@@ -121,12 +124,15 @@ struct ChatBotView: View {
                 .padding(12)
                 .background(Color(hex: "1976D2"))
                 .clipShape(Circle())
+                .accessibilityLabel(isProcessing ? "Processing" : "Send message")
         }
         .disabled(inputText.isEmpty || isProcessing)
     }
     
     private func sendMessage() {
-        guard !inputText.isEmpty else { return }
+        guard !inputText.isEmpty else {
+            return
+        }
         
         let userMessage = ChatBotMessage(text: inputText, isUser: true)
         messages.append(userMessage)
@@ -150,7 +156,9 @@ struct ChatBotView: View {
     }
     
     private func saveChatHistory() {
-        guard !messages.isEmpty, let userId = Auth.auth().currentUser?.uid else { return }
+        guard !messages.isEmpty, let userId = Auth.auth().currentUser?.uid else {
+            return
+        }
         
         Task {
             let title = await generateChatTitle()
@@ -161,7 +169,7 @@ struct ChatBotView: View {
             ]
             
             await MainActor.run {
-                db.collection("users").document(userId).collection("chatHistory").addDocument(data: chatData)
+                database.collection("users").document(userId).collection("chatHistory").addDocument(data: chatData)
             }
         }
     }
@@ -177,7 +185,9 @@ struct ChatBotView: View {
     
     private func toggleRecording() {
         if audioRecorder.isRecording {
-            guard let audioURL = audioRecorder.stopRecording() else { return }
+            guard let audioURL = audioRecorder.stopRecording() else {
+                return
+            }
             processVoiceInput(audioURL: audioURL)
         } else {
             Task {
@@ -202,7 +212,9 @@ struct ChatBotView: View {
     }
     
     private func playLastResponse() {
-        guard let lastBotMessage = messages.last(where: { !$0.isUser }) else { return }
+        guard let lastBotMessage = messages.last(where: { !$0.isUser }) else {
+            return
+        }
         isPlayingAudio = true
         Task { @MainActor in
             do {
@@ -283,7 +295,7 @@ struct MessageTextView: View {
 
 struct ChatHistoryListView: View {
     @State private var chatSessions: [(id: String, data: [String: Any])] = []
-    private let db = Firestore.firestore()
+    private let database = Firestore.firestore()
     
     var body: some View {
         List {
@@ -311,9 +323,11 @@ struct ChatHistoryListView: View {
     }
     
     private func loadChatHistory() {
-        guard let userId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = Auth.auth().currentUser?.uid else {
+            return
+        }
         
-        db.collection("users").document(userId).collection("chatHistory")
+        database.collection("users").document(userId).collection("chatHistory")
             .order(by: "timestamp", descending: true)
             .getDocuments { snapshot, error in
                 if let documents = snapshot?.documents {
@@ -352,11 +366,16 @@ struct ChatHistoryDetailView: View {
     }
     
     private func loadMessages() {
-        guard let messagesData = sessionData["messages"] as? [[String: Any]] else { return }
+        guard let messagesData = sessionData["messages"] as? [[String: Any]] else {
+            return
+        }
         messages = messagesData.compactMap { dict in
             guard let text = dict["text"] as? String,
-                  let isUser = dict["isUser"] as? Bool else { return nil }
+                  let isUser = dict["isUser"] as? Bool else {
+                return nil
+            }
             return ChatBotMessage(text: text, isUser: isUser)
         }
     }
 }
+

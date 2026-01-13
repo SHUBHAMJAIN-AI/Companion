@@ -36,7 +36,7 @@ enum StorageProvider: String, CaseIterable {
 }
 
 /// Central service configuration
-struct ServiceConfiguration {
+enum ServiceConfiguration {
     // MARK: - Provider Selection
 
     /// Current LLM provider (default: OpenRouter)

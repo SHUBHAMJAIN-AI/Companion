@@ -2,9 +2,9 @@
 // Feedback View for Doctors
 //
 
-import SwiftUI
-import FirebaseFirestore
 import FirebaseAuth
+import FirebaseFirestore
+import SwiftUI
 
 struct Department: Identifiable {
     let id = UUID()
@@ -17,7 +17,7 @@ struct FeedbackView: View {
     @State private var selectedAdmin = ""
     @State private var feedbackText = ""
     @State private var isSubmitting = false
-    private let db = Firestore.firestore()
+    private let database = Firestore.firestore()
     
     private let departments = [
         Department(name: "Cardiology", email: "cardiology@hospital.com"),
@@ -78,7 +78,7 @@ struct FeedbackView: View {
             "read": false
         ]
         
-        db.collection("feedback").addDocument(data: feedbackData) { error in
+        database.collection("feedback").addDocument(data: feedbackData) { error in
             isSubmitting = false
             if error == nil {
                 dismiss()

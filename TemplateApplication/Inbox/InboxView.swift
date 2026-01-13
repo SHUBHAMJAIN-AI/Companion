@@ -2,14 +2,14 @@
 // Inbox View for Administrator
 //
 
-import SwiftUI
-import FirebaseFirestore
 import FirebaseAuth
+import FirebaseFirestore
+import SwiftUI
 
 struct InboxView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var messages: [(id: String, data: [String: Any])] = []
-    private let db = Firestore.firestore()
+    private let database = Firestore.firestore()
     
     var body: some View {
         NavigationView {
@@ -59,12 +59,14 @@ struct InboxView: View {
     }
     
     private func loadMessages() {
-        guard let userEmail = Auth.auth().currentUser?.email else { return }
+        guard let userEmail = Auth.auth().currentUser?.email else {
+            return
+        }
         
-        db.collection("feedback")
+        database.collection("feedback")
             .whereField("toEmail", isEqualTo: userEmail)
             .order(by: "timestamp", descending: true)
-            .getDocuments { snapshot, error in
+            .getDocuments { snapshot, _ in
                 if let documents = snapshot?.documents {
                     messages = documents.map { (id: $0.documentID, data: $0.data()) }
                 }
@@ -83,7 +85,7 @@ struct InboxView: View {
 struct FeedbackDetailView: View {
     let messageData: [String: Any]
     let messageId: String
-    private let db = Firestore.firestore()
+    private let database = Firestore.firestore()
     
     var body: some View {
         ScrollView {
@@ -112,7 +114,7 @@ struct FeedbackDetailView: View {
     }
     
     private func markAsRead() {
-        db.collection("feedback").document(messageId).updateData(["read": true])
+        database.collection("feedback").document(messageId).updateData(["read": true])
     }
     
     private func formatDate(_ timestamp: Double) -> String {

@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
+import FirebaseFirestore
 import Foundation
 import SpeziAccount
 import SpeziContact
 import SwiftUI
-import FirebaseFirestore
 
 
 /// Displays the contacts for the Spezi Template Application.
@@ -66,10 +66,7 @@ struct Contacts: View {
     private func loadContacts() async {
         allContacts = await ContactsService.shared.fetchContacts()
     }
-    
 
-    
-    
     init(presentingAccount: Binding<Bool>) {
         self._presentingAccount = presentingAccount
     }
@@ -126,6 +123,7 @@ struct OnCallDoctorsView: View {
             Image(systemName: icon)
                 .font(.system(size: 40))
                 .foregroundColor(Color(hex: "1976D2"))
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(dept).font(.headline).foregroundColor(.primary)
                 Text(desc).font(.caption).foregroundColor(.secondary).lineLimit(2)
@@ -135,10 +133,12 @@ struct OnCallDoctorsView: View {
                 Button { call(phone) } label: {
                     Image(systemName: "phone.fill").font(.title3).foregroundColor(.white)
                         .padding(10).background(Color.green).clipShape(Circle())
+                        .accessibilityLabel("Call \(dept)")
                 }
                 Button { message(phone) } label: {
                     Image(systemName: "message.fill").font(.title3).foregroundColor(.white)
                         .padding(10).background(Color(hex: "1976D2")).clipShape(Circle())
+                        .accessibilityLabel("Message \(dept)")
                 }
             }
         }
@@ -275,11 +275,12 @@ struct AllContactsList: View {
 
 struct AllContactCard: View {
     let contact: StaffContact
-    
+
     var body: some View {
         HStack(spacing: 15) {
             Image(systemName: contact.icon).font(.system(size: 40))
                 .foregroundColor(Color(hex: "1976D2"))
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(contact.firstName) \(contact.lastName)")
                     .font(.headline).foregroundColor(.primary)
@@ -291,10 +292,12 @@ struct AllContactCard: View {
                 Button { call(contact.phone) } label: {
                     Image(systemName: "phone.fill").font(.title3).foregroundColor(.white)
                         .padding(10).background(Color.green).clipShape(Circle())
+                        .accessibilityLabel("Call \(contact.firstName)")
                 }
                 Button { email(contact.email) } label: {
                     Image(systemName: "envelope.fill").font(.title3).foregroundColor(.white)
                         .padding(10).background(Color(hex: "1976D2")).clipShape(Circle())
+                        .accessibilityLabel("Email \(contact.firstName)")
                 }
             }
         }
