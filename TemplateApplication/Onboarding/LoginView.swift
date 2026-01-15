@@ -2,10 +2,10 @@
 // Login View for Health Companion
 //
 
-import SwiftUI
-import SpeziViews
-import SpeziOnboarding
 import FirebaseAuth
+import SpeziOnboarding
+import SpeziViews
+import SwiftUI
 
 struct LoginView: View {
     @Environment(ManagedNavigationStack.Path.self) private var managedNavigationPath
@@ -46,7 +46,8 @@ struct LoginView: View {
             Image(systemName: "heart.text.square.fill")
                 .font(.system(size: 60))
                 .foregroundColor(Color(hex: "1976D2"))
-            
+                .accessibilityHidden(true)
+
             Text(isSignUpMode ? "Create Account" : "Welcome Back")
                 .font(.largeTitle)
                 .fontWeight(.bold)
@@ -142,9 +143,9 @@ struct LoginView: View {
         isLoading = true
         errorMessage = ""
         
-        Auth.auth().signIn(withEmail: username, password: password) { result, error in
+        Auth.auth().signIn(withEmail: username, password: password) { _, error in
             isLoading = false
-            if let error = error {
+            if error != nil {
                 errorMessage = "Invalid email or password"
             } else {
                 managedNavigationPath.nextStep()
@@ -156,7 +157,7 @@ struct LoginView: View {
         isLoading = true
         errorMessage = ""
         
-        Auth.auth().createUser(withEmail: username, password: password) { result, error in
+        Auth.auth().createUser(withEmail: username, password: password) { _, error in
             isLoading = false
             if let error = error {
                 errorMessage = error.localizedDescription

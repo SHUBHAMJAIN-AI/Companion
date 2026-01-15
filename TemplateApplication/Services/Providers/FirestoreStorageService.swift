@@ -3,14 +3,14 @@
 // Document storage using Firestore (metadata) + Firebase Storage (files)
 //
 
-import Foundation
+import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
-import FirebaseAuth
+import Foundation
 
 @MainActor
 class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
-    private let db = Firestore.firestore()
+    private let database = Firestore.firestore()
     private let storage = Storage.storage()
     private let collectionName: String
     private let storagePrefix: String
@@ -70,7 +70,9 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
                 var failureHandle: String?
 
                 successHandle = uploadTask.observe(.success) { snapshot in
-                    guard !hasResumed else { return }
+                    guard !hasResumed else {
+                        return
+                    }
                     hasResumed = true
 
                     // Clean up observers
@@ -85,7 +87,9 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
                     }
                 }
                 failureHandle = uploadTask.observe(.failure) { snapshot in
-                    guard !hasResumed else { return }
+                    guard !hasResumed else {
+                        return
+                    }
                     hasResumed = true
 
                     // Clean up observers
@@ -108,7 +112,7 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
                 "metadata": metadata ?? [:]
             ]
 
-            try await db.collection(collectionName).document(documentId).setData(documentData)
+            try await database.collection(collectionName).document(documentId).setData(documentData)
 
             if ServiceConfiguration.enableServiceLogging {
                 print("FirestoreStorage: Uploaded \(filename) to \(storagePath)")
@@ -147,7 +151,7 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
         }
 
         do {
-            var query: Query = db.collection(collectionName)
+            var query: Query = database.collection(collectionName)
                 .whereField("uploadedBy", isEqualTo: userId)
                 .order(by: "uploadedAt", descending: true)
 
@@ -195,7 +199,7 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
     func deleteDocument(path: String) async throws {
         // Find the document in Firestore by storage path
         do {
-            let snapshot = try await db.collection(collectionName)
+            let snapshot = try await database.collection(collectionName)
                 .whereField("storagePath", isEqualTo: path)
                 .getDocuments()
 
@@ -223,7 +227,7 @@ class FirestoreStorageService: ObservableObject, DocumentStorageProtocol {
     /// Get document metadata from Firestore
     func getDocumentMetadata(path: String) async throws -> StoredDocument {
         do {
-            let snapshot = try await db.collection(collectionName)
+            let snapshot = try await database.collection(collectionName)
                 .whereField("storagePath", isEqualTo: path)
                 .getDocuments()
 

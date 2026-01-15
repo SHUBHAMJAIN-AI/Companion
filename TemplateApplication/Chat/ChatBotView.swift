@@ -327,9 +327,11 @@ struct ChatHistoryListView: View {
             return
         }
         
-        database.collection("users").document(userId).collection("chatHistory")
+        database.collection("users")
+            .document(userId)
+            .collection("chatHistory")
             .order(by: "timestamp", descending: true)
-            .getDocuments { snapshot, error in
+            .getDocuments { snapshot, _ in
                 if let documents = snapshot?.documents {
                     chatSessions = documents.map { (id: $0.documentID, data: $0.data()) }
                 }
@@ -378,4 +380,3 @@ struct ChatHistoryDetailView: View {
         }
     }
 }
-
