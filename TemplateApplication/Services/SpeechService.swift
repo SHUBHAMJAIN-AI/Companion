@@ -2,9 +2,9 @@
 // Speech Recognition and Text-to-Speech Service for Health Companion
 //
 
+import AVFoundation
 import Foundation
 import Speech
-import AVFoundation
 
 @MainActor
 class SpeechService: NSObject, ObservableObject {
@@ -115,8 +115,6 @@ class SpeechService: NSObject, ObservableObject {
         speechSynthesizer.stopSpeaking(at: .immediate)
     }
 }
-
-
 
 enum SpeechError: Error {
     case recognitionRequestFailed

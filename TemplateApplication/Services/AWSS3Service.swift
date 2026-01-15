@@ -2,8 +2,8 @@
 // AWS S3 Integration Service for Health Companion
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 
 @MainActor
 class AWSS3Service: ObservableObject {
@@ -48,8 +48,13 @@ class AWSS3Service: ObservableObject {
         request.setValue("\(data.count)", forHTTPHeaderField: "Content-Length")
         
         let sigParams = SignatureParams(
-            method: "PUT", path: "/\(key)", date: amzDate, dateStamp: dateStamp,
-            contentType: contentType, contentLength: data.count, payloadHash: payloadHash
+            method: "PUT",
+            path: "/\(key)",
+            date: amzDate,
+            dateStamp: dateStamp,
+            contentType: contentType,
+            contentLength: data.count,
+            payloadHash: payloadHash
         )
         let signature = createSignature(sigParams)
         request.setValue(signature, forHTTPHeaderField: "Authorization")
@@ -79,14 +84,16 @@ class AWSS3Service: ObservableObject {
             "host:\(bucketName).s3.\(region).amazonaws.com\nx-amz-content-sha256:\(params.payloadHash)\nx-amz-date:\(params.date)\n"
         let signedHeaders = "content-length;content-type;host;x-amz-content-sha256;x-amz-date"
         let canonicalRequest = "\(params.method)\n\(params.path)\n\n\(canonicalHeaders)\n\(signedHeaders)\n\(params.payloadHash)"
-        
-        let canonicalHash = sha256Hash(canonicalRequest.data(using: .utf8)!)
-        let stringToSign = "AWS4-HMAC-SHA256\n\(params.date)\n\(credentialScope)\n\(canonicalHash)"
-        
+
+        guard let canonicalRequestData = canonicalRequest.data(using: .utf8),
+              let stringToSignData = "AWS4-HMAC-SHA256\n\(params.date)\n\(credentialScope)\n\(sha256Hash(canonicalRequestData))".data(using: .utf8) else {
+            return ""
+        }
+
         let signingKey = getSignatureKey(key: secretKey, dateStamp: params.dateStamp, regionName: region, serviceName: "s3")
-        let signatureData = hmacSHA256(data: stringToSign.data(using: .utf8)!, key: signingKey)
+        let signatureData = hmacSHA256(data: stringToSignData, key: signingKey)
         let signature = signatureData.map { String(format: "%02x", $0) }.joined()
-        
+
         return "AWS4-HMAC-SHA256 Credential=\(accessKey)/\(credentialScope), " +
             "SignedHeaders=\(signedHeaders), Signature=\(signature)"
     }
@@ -102,10 +109,17 @@ class AWSS3Service: ObservableObject {
     }
     
     private func getSignatureKey(key: String, dateStamp: String, regionName: String, serviceName: String) -> Data {
-        let kDate = hmacSHA256(data: dateStamp.data(using: .utf8)!, key: "AWS4\(key)".data(using: .utf8)!)
-        let kRegion = hmacSHA256(data: regionName.data(using: .utf8)!, key: kDate)
-        let kService = hmacSHA256(data: serviceName.data(using: .utf8)!, key: kRegion)
-        let kSigning = hmacSHA256(data: "aws4_request".data(using: .utf8)!, key: kService)
+        guard let dateStampData = dateStamp.data(using: .utf8),
+              let awsKeyData = "AWS4\(key)".data(using: .utf8),
+              let regionNameData = regionName.data(using: .utf8),
+              let serviceNameData = serviceName.data(using: .utf8),
+              let aws4RequestData = "aws4_request".data(using: .utf8) else {
+            return Data()
+        }
+        let kDate = hmacSHA256(data: dateStampData, key: awsKeyData)
+        let kRegion = hmacSHA256(data: regionNameData, key: kDate)
+        let kService = hmacSHA256(data: serviceNameData, key: kRegion)
+        let kSigning = hmacSHA256(data: aws4RequestData, key: kService)
         return kSigning
     }
     
@@ -156,8 +170,13 @@ class AWSS3Service: ObservableObject {
         request.setValue(amzDate, forHTTPHeaderField: "x-amz-date")
         
         let sigParams = SignatureParams(
-            method: "GET", path: "/\(key)", date: amzDate, dateStamp: dateStamp,
-            contentType: "", contentLength: 0, payloadHash: sha256Hash(Data())
+            method: "GET",
+            path: "/\(key)",
+            date: amzDate,
+            dateStamp: dateStamp,
+            contentType: "",
+            contentLength: 0,
+            payloadHash: sha256Hash(Data())
         )
         let signature = createSignature(sigParams)
         request.setValue(signature, forHTTPHeaderField: "Authorization")

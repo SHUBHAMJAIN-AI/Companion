@@ -2,8 +2,8 @@
 // Discover View for Health Companion
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct DiscoverView: View {
     @State private var selectedTab = 0
@@ -39,6 +39,7 @@ struct DiscoverView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showCreatePost = true }) {
                         Image(systemName: "plus.circle.fill")
+                            .accessibilityLabel("Create new post")
                     }
                 }
             }
@@ -201,6 +202,7 @@ struct ArticleCard: View {
         } label: {
             Image(systemName: "trash")
                 .foregroundColor(.red)
+                .accessibilityLabel("Delete post")
         }
         .buttonStyle(.plain)
     }
@@ -210,33 +212,41 @@ struct ArticleCard: View {
             Button {
                 Task {
                     await postsService.toggleLike(
-                        postId: article.id, userId: userId,
-                        currentlyLiked: hasLiked, currentlyDisliked: hasDisliked
+                        postId: article.id,
+                        userId: userId,
+                        currentlyLiked: hasLiked,
+                        currentlyDisliked: hasDisliked
                     )
                     articles = postsService.posts
                 }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: hasLiked ? "hand.thumbsup.fill" : "hand.thumbsup")
+                        .accessibilityHidden(true)
                     Text("\(article.likes)")
                 }
                 .foregroundColor(hasLiked ? .blue : .gray)
+                .accessibilityLabel("Like, \(article.likes) likes")
             }
-            
+
             Button {
                 Task {
                     await postsService.toggleDislike(
-                        postId: article.id, userId: userId,
-                        currentlyDisliked: hasDisliked, currentlyLiked: hasLiked
+                        postId: article.id,
+                        userId: userId,
+                        currentlyDisliked: hasDisliked,
+                        currentlyLiked: hasLiked
                     )
                     articles = postsService.posts
                 }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: hasDisliked ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                        .accessibilityHidden(true)
                     Text("\(article.dislikes)")
                 }
                 .foregroundColor(hasDisliked ? .red : .gray)
+                .accessibilityLabel("Dislike, \(article.dislikes) dislikes")
             }
         }
     }
@@ -261,7 +271,8 @@ struct AnnouncementCard: View {
             Image(systemName: announcement.type.icon)
                 .font(.title2)
                 .foregroundColor(announcement.type.color)
-            
+                .accessibilityHidden(true)
+
             VStack(alignment: .leading, spacing: 5) {
                 Text(announcement.title)
                     .font(.headline)
@@ -279,6 +290,7 @@ struct AnnouncementCard: View {
                 } label: {
                     Image(systemName: "trash")
                         .foregroundColor(.red)
+                        .accessibilityLabel("Delete announcement")
                 }
                 .buttonStyle(.plain)
             }

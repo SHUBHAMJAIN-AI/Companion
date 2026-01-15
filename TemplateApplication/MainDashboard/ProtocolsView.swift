@@ -37,7 +37,9 @@ struct ProtocolsView: View {
     
     private var searchBar: some View {
         HStack {
-            Image(systemName: "magnifyingglass").foregroundColor(.gray)
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.gray)
+                .accessibilityHidden(true)
             TextField("Search protocols...", text: $searchText).textFieldStyle(.plain)
         }
         .padding(12)

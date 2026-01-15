@@ -2,10 +2,10 @@
 // Health Companion Chat Interface
 //
 
-import SwiftUI
-import SpeziViews
-import Speech
 import AVFoundation
+import Speech
+import SpeziViews
+import SwiftUI
 
 struct ChatView: View {
     @State private var messageText = ""
@@ -67,6 +67,7 @@ struct ChatView: View {
                 Button(action: toggleRecording) {
                     Image(systemName: speechService.isRecording ? "mic.fill" : "mic")
                         .foregroundColor(speechService.isRecording ? .red : .blue)
+                        .accessibilityLabel(speechService.isRecording ? "Stop recording" : "Start recording")
                 }
                 
                 Button("Send", action: sendMessage)
@@ -92,7 +93,9 @@ struct ChatView: View {
     }
     
     private func sendMessage() {
-        guard !messageText.isEmpty else { return }
+        guard !messageText.isEmpty else {
+            return
+        }
         
         let userMessage = ChatMessage(content: messageText, isUser: true)
         messages.append(userMessage)

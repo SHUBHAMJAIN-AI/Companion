@@ -2,9 +2,9 @@
 // Role Selection for Health Companion Users
 //
 
-import SwiftUI
-import SpeziViews
 import SpeziOnboarding
+import SpeziViews
+import SwiftUI
 
 struct RoleSelectionView: View {
     @Environment(ManagedNavigationStack.Path.self) private var managedNavigationPath
@@ -92,12 +92,13 @@ struct RoleCard: View {
                     .font(.title2)
                     .foregroundColor(isSelected ? .white : .blue)
                     .frame(width: 40)
-                
+                    .accessibilityHidden(true)
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline)
                         .foregroundColor(isSelected ? .white : .primary)
-                    
+
                     if !description.isEmpty {
                         Text(description)
                             .font(.caption)
@@ -105,12 +106,13 @@ struct RoleCard: View {
                             .multilineTextAlignment(.leading)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.white)
+                        .accessibilityHidden(true)
                 }
             }
             .padding()
@@ -128,15 +130,18 @@ struct RoleCard: View {
 }
 
 enum UserRole: String, CaseIterable {
-    case doctor = "doctor"
-    case resident = "resident"
-    case administrator = "administrator"
-    
+    case doctor
+    case resident
+    case administrator
+
     var displayName: String {
         switch self {
-        case .doctor: return "Doctor"
-        case .resident: return "Resident"
-        case .administrator: return "Administrator"
+        case .doctor:
+            return "Doctor"
+        case .resident:
+            return "Resident"
+        case .administrator:
+            return "Administrator"
         }
     }
 }

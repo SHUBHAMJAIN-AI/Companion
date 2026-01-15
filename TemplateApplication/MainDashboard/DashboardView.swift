@@ -2,9 +2,9 @@
 // Main Dashboard for RWJUH Hospitalist Companion
 //
 
-import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
+import SwiftUI
 
 struct DashboardView: View {
     @State private var searchText = ""
@@ -89,7 +89,9 @@ struct DashboardView: View {
     }
     
     private func sendQuery() {
-        guard !searchText.isEmpty else { return }
+        guard !searchText.isEmpty else {
+            return
+        }
         
         isProcessing = true
         let query = searchText
@@ -121,6 +123,7 @@ struct DashboardView: View {
             } label: {
                 Image(systemName: "waveform")
                     .foregroundColor(.white)
+                    .accessibilityLabel("Voice test")
             }
             
             Button("Logout") {
@@ -162,6 +165,7 @@ struct DashboardView: View {
             }) {
                 Image(systemName: isRecording ? "mic.fill" : "mic")
                     .foregroundColor(Color(hex: "1976D2"))
+                    .accessibilityLabel(isRecording ? "Stop recording" : "Start recording")
             }
             .padding(.trailing, 8)
             
@@ -181,6 +185,7 @@ struct DashboardView: View {
                 .padding(8)
                 .background(Color(hex: "1976D2"))
                 .clipShape(Circle())
+                .accessibilityLabel("Send message")
         }
         .padding(.trailing, 8)
     }
@@ -208,9 +213,12 @@ struct DashboardView: View {
     }
     
     private func loadUnreadCount() {
-        guard let userEmail = Auth.auth().currentUser?.email else { return }
-        
-        Firestore.firestore().collection("feedback")
+        guard let userEmail = Auth.auth().currentUser?.email else {
+            return
+        }
+
+        let feedbackCollection = Firestore.firestore().collection("feedback")
+        feedbackCollection
             .whereField("toEmail", isEqualTo: userEmail)
             .whereField("read", isEqualTo: false)
             .getDocuments { snapshot, _ in
@@ -304,12 +312,13 @@ struct ChatHistoryCard: View {
 struct QuickActionButton: View {
     let title: String
     let icon: String
-    
+
     var body: some View {
         Button(action: {}) {
             VStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.title2)
+                    .accessibilityHidden(true)
                 Text(title)
                     .font(.caption)
                     .multilineTextAlignment(.center)
@@ -357,11 +366,12 @@ struct ActionButton: View {
     let icon: String
     let title: String
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack {
                 Image(systemName: icon)
+                    .accessibilityHidden(true)
                 Text(title).fontWeight(.medium)
             }
             .foregroundColor(Color(hex: "1976D2"))
@@ -377,11 +387,12 @@ struct ActionButton: View {
 struct InboxButtonWithBadge: View {
     let unreadCount: Int
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack {
                 Image(systemName: "tray.fill")
+                    .accessibilityHidden(true)
                 Text("Inbox").fontWeight(.medium)
                 if unreadCount > 0 {
                     Text("\(unreadCount)")
@@ -408,12 +419,13 @@ struct BottomNavItem: View {
     let label: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: 20))
+                    .accessibilityHidden(true)
                 Text(label)
                     .font(.caption2)
             }
@@ -432,7 +444,7 @@ extension Color {
         let red = Double((rgbValue & 0xFF0000) >> 16) / 255.0
         let green = Double((rgbValue & 0x00FF00) >> 8) / 255.0
         let blue = Double(rgbValue & 0x0000FF) / 255.0
-        
+
         self.init(red: red, green: green, blue: blue)
     }
 }

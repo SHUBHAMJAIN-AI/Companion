@@ -61,6 +61,7 @@ struct VoiceTestView: View {
                 Image(systemName: audioRecorder.isRecording ? "stop.circle.fill" : "mic.circle.fill")
                     .font(.system(size: 60))
                     .foregroundColor(audioRecorder.isRecording ? .red : .blue)
+                    .accessibilityHidden(true)
                 Text(audioRecorder.isRecording ? "Stop" : "Record")
             }
         }
@@ -75,6 +76,7 @@ struct VoiceTestView: View {
                 Image(systemName: "speaker.wave.2.circle.fill")
                     .font(.system(size: 60))
                     .foregroundColor(.green)
+                    .accessibilityHidden(true)
                 Text("Play")
             }
         }

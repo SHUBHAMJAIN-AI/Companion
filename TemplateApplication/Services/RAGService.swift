@@ -53,7 +53,6 @@ class RAGService: ObservableObject {
            let bodyData = body.data(using: .utf8),
            let bodyJson = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
            let answer = bodyJson["answer"] as? String {
-            
             var sources: [Source] = []
             if let sourcesArray = bodyJson["sources"] as? [[String: Any]] {
                 sources = sourcesArray.compactMap { sourceDict in

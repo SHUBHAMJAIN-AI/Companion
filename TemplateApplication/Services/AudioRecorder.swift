@@ -2,8 +2,8 @@
 // Audio Recorder for Voice Input
 //
 
-import Foundation
 import AVFoundation
+import Foundation
 
 @MainActor
 class AudioRecorder: NSObject, ObservableObject {

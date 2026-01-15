@@ -38,7 +38,7 @@ class OpenAIService: ObservableObject {
         request.httpBody = try JSONEncoder().encode(requestBody)
         
         print("OpenAI Request URL: \(baseURL)")
-        if let bodyString = String(data: request.httpBody!, encoding: .utf8) {
+        if let bodyData = request.httpBody, let bodyString = String(data: bodyData, encoding: .utf8) {
             print("OpenAI Request Body: \(bodyString)")
         }
         return request

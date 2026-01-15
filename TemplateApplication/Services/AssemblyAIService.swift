@@ -2,9 +2,9 @@
 // AssemblyAI Speech-to-Text and Text-to-Speech Service
 //
 
-import Foundation
-import AVFoundation
 import AVFAudio
+import AVFoundation
+import Foundation
 
 @MainActor
 class AssemblyAIService: NSObject, ObservableObject {
@@ -19,7 +19,10 @@ class AssemblyAIService: NSObject, ObservableObject {
     }
     
     private func uploadAudio(data: Data) async throws -> String {
-        var request = URLRequest(url: URL(string: "https://api.assemblyai.com/v2/upload")!)
+        guard let url = URL(string: "https://api.assemblyai.com/v2/upload") else {
+            throw AssemblyAIError.uploadFailed
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "authorization")
         request.httpBody = data
@@ -47,7 +50,10 @@ class AssemblyAIService: NSObject, ObservableObject {
     }
     
     private func createTranscript(audioURL: String) async throws -> String {
-        var request = URLRequest(url: URL(string: "https://api.assemblyai.com/v2/transcript")!)
+        guard let url = URL(string: "https://api.assemblyai.com/v2/transcript") else {
+            throw AssemblyAIError.transcriptionFailed
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -78,7 +84,9 @@ class AssemblyAIService: NSObject, ObservableObject {
     }
     
     private func pollTranscript(id: String) async throws -> String {
-        let url = URL(string: "https://api.assemblyai.com/v2/transcript/\(id)")!
+        guard let url = URL(string: "https://api.assemblyai.com/v2/transcript/\(id)") else {
+            throw AssemblyAIError.transcriptionFailed
+        }
         var request = URLRequest(url: url)
         request.setValue(apiKey, forHTTPHeaderField: "authorization")
         

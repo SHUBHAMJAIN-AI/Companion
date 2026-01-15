@@ -2,9 +2,9 @@
 // Document Upload Interface for Health Companion
 //
 
+import SpeziViews
 import SwiftUI
 import UniformTypeIdentifiers
-import SpeziViews
 
 struct DocumentUploadView: View {
     @State private var showingDocumentPicker = false
@@ -56,6 +56,7 @@ struct DocumentUploadView: View {
             Image(systemName: "doc.badge.plus")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
+                .accessibilityHidden(true)
             
             Text("Upload Health Documents")
                 .font(.title2)
@@ -70,15 +71,17 @@ struct DocumentUploadView: View {
                 Button(action: { showingCamera = true }) {
                     VStack {
                         Image(systemName: "camera.fill")
+                            .accessibilityHidden(true)
                         Text("Camera")
                             .font(.caption)
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                
+
                 Button(action: { showingDocumentPicker = true }) {
                     VStack {
                         Image(systemName: "doc.fill")
+                            .accessibilityHidden(true)
                         Text("Files")
                             .font(.caption)
                     }
@@ -171,7 +174,9 @@ struct DocumentUploadView: View {
     }
     
     private func handleCameraCapture(_ image: UIImage) {
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            return
+        }
         let filename = "photo_\(Date().timeIntervalSince1970).jpg"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         try? data.write(to: tempURL)
@@ -250,6 +255,7 @@ struct DocumentRow: View {
                 Image(systemName: document.type.icon)
                     .foregroundColor(.blue)
                     .frame(width: 30)
+                    .accessibilityHidden(true)
                 
                 VStack(alignment: .leading) {
                     Text(document.name)
@@ -296,7 +302,7 @@ final class DocumentInteractionDelegate: NSObject, UIDocumentInteractionControll
     static let shared = DocumentInteractionDelegate()
     
     func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
-        return UIApplication.shared.connectedScenes
+        UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .first?.windows.first?.rootViewController ?? UIViewController()
     }
